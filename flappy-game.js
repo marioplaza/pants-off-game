@@ -238,7 +238,7 @@ class FlappyGame {
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
                     console.log('🚫 ESC - Cerrando modal');
-                    this.hideMobileInput();
+                    if (this.isMobile) this.hideMobileInput();
                     this.showingRegistrationModal = false;
                 } else if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
                     e.preventDefault();
@@ -670,7 +670,7 @@ class FlappyGame {
             
             // Click fuera del modal para cerrar
             if (x < modalX || x > modalX + modalWidth || y < modalY || y > modalY + modalHeight) {
-                this.hideMobileInput();
+                if (this.isMobile) this.hideMobileInput();
                 this.showingRegistrationModal = false;
                 return;
             }
@@ -689,7 +689,7 @@ class FlappyGame {
                 console.log('📝 Texto actual antes del click:', this.inputText);
                 
                 if (this.isMobile) {
-                    // Activar input móvil
+                    // Solo para móvil: Activar input HTML
                     console.log('📝 Activando input móvil...');
                     
                     // Hacer visible el input temporalmente para móvil
@@ -709,13 +709,8 @@ class FlappyGame {
                     this.mobileInput.value = this.inputText;
                     this.mobileInput.focus();
                     this.setupMobileInputListener();
-                } else {
-                    console.log('💻 Modo PC - input por teclado');
-                    console.log('💡 Puedes escribir directamente con el teclado');
-                    // En PC, el input se maneja por eventos de teclado
-                    // Asegurar que el modal tiene foco para los eventos
-                    this.canvas.focus();
                 }
+                // En PC no hacemos nada especial aquí - el teclado ya funciona
                 return;
             }
             
@@ -748,7 +743,7 @@ class FlappyGame {
             };
             
             if (this.isPointInButton(x, y, closeButton.x, closeButton.y, closeButton.width, closeButton.height)) {
-                this.hideMobileInput();
+                if (this.isMobile) this.hideMobileInput();
                 this.showingRegistrationModal = false;
             }
             
@@ -1067,7 +1062,7 @@ class FlappyGame {
             
             if (result.success) {
                 console.log('✅ Registro exitoso, cerrando modal y yendo al menú');
-                this.hideMobileInput(); // Ocultar input móvil si estaba visible
+                if (this.isMobile) this.hideMobileInput(); // Ocultar input móvil si estaba visible
                 this.showingRegistrationModal = false;
                 this.state = 'menu';
                 this.fetchLeaderboard(); // Cargar ranking después del registro
@@ -1088,8 +1083,9 @@ class FlappyGame {
             this.mobileInput.removeEventListener('input', this.mobileInputListener);
         }
         
-        // Crear nuevo listener
+        // Crear nuevo listener - SOLO para móvil
         this.mobileInputListener = (e) => {
+            if (!this.isMobile) return; // Solo procesar en móvil
             console.log('📱 Input móvil cambió:', e.target.value);
             this.inputText = e.target.value.replace(/[^a-zA-Z0-9]/g, '').substring(0, 15);
             e.target.value = this.inputText; // Sincronizar
@@ -1126,6 +1122,7 @@ class FlappyGame {
     }
     
     hideMobileInput() {
+        if (!this.mobileInput) return; // Si no existe el elemento, salir
         console.log('🙈 Ocultando input móvil');
         this.mobileInput.style.position = 'absolute';
         this.mobileInput.style.left = '-9999px';
