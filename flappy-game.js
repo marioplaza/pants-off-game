@@ -320,14 +320,14 @@ class FlappyGame {
                 }
             };
             
-            // Timeout para iOS - si no carga en 3 segundos, continuar
+            // Timeout para iOS - si no carga en 1 segundo, continuar
             setTimeout(() => {
                 if (!audioLoaded) {
                     console.warn(`⏰ Timeout cargando sonido: ${filename} (continuando...)`);
                     audioLoaded = true;
                     this.assetLoaded();
                 }
-            }, 3000);
+            }, 1000);
             
             audio.src = `assets/sounds/${filename}`;
             audio.volume = filename === 'cancion.mp3' ? 0.2 : 0.1;
@@ -624,10 +624,33 @@ class FlappyGame {
         this.ctx.fillStyle = this.BLACK;
         this.ctx.font = `${Math.max(14, 16 * this.scale)}px monospace`;
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('Cargando...', this.WIDTH / 2, this.HEIGHT / 2);
         
         const progress = (this.assetsLoadedCount / this.assetsToLoad) * 100;
-        this.ctx.fillText(`${Math.round(progress)}%`, this.WIDTH / 2, this.HEIGHT / 2 + 30 * this.scale);
+        
+        if (progress < 80) {
+            this.ctx.fillText('Cargando imágenes...', this.WIDTH / 2, this.HEIGHT / 2);
+        } else {
+            this.ctx.fillText('Cargando audio...', this.WIDTH / 2, this.HEIGHT / 2);
+            this.ctx.font = `${Math.max(12, 14 * this.scale)}px monospace`;
+            this.ctx.fillText('(puede tardar en iOS)', this.WIDTH / 2, this.HEIGHT / 2 + 25 * this.scale);
+        }
+        
+        this.ctx.font = `${Math.max(14, 16 * this.scale)}px monospace`;
+        this.ctx.fillText(`${Math.round(progress)}%`, this.WIDTH / 2, this.HEIGHT / 2 + 50 * this.scale);
+        
+        // Barra de progreso
+        const barWidth = this.WIDTH * 0.6;
+        const barHeight = 8;
+        const barX = (this.WIDTH - barWidth) / 2;
+        const barY = this.HEIGHT / 2 + 70 * this.scale;
+        
+        // Fondo de la barra
+        this.ctx.fillStyle = '#34495e';
+        this.ctx.fillRect(barX, barY, barWidth, barHeight);
+        
+        // Progreso de la barra
+        this.ctx.fillStyle = '#2ecc71';
+        this.ctx.fillRect(barX, barY, barWidth * (progress / 100), barHeight);
     }
     
     renderInicio() {
