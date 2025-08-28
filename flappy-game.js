@@ -242,6 +242,7 @@ class FlappyGame {
                     }
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
+                    if (this.isMobile) this.hideMobileInput();
                     this.showingRegistrationModal = false;
                 } else if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
                     e.preventDefault();
@@ -668,6 +669,7 @@ class FlappyGame {
             
             // Click fuera del modal para cerrar
             if (x < modalX || x > modalX + modalWidth || y < modalY || y > modalY + modalHeight) {
+                if (this.isMobile) this.hideMobileInput();
                 this.showingRegistrationModal = false;
                 return;
             }
@@ -681,16 +683,39 @@ class FlappyGame {
             if (x >= inputX && x <= inputX + inputWidth && 
                 y >= inputY && y <= inputY + inputHeight) {
                 if (this.isMobile) {
-                    // Input invisible pero focusable para activar teclado virtual
+                    // Input visible temporal para móvil
                     this.mobileInput.style.position = 'fixed';
-                    this.mobileInput.style.top = '-1000px'; // Fuera de pantalla
-                    this.mobileInput.style.left = '-1000px';
-                    this.mobileInput.style.opacity = '0';
-                    this.mobileInput.style.pointerEvents = 'none';
-                    this.mobileInput.style.zIndex = '-1';
+                    this.mobileInput.style.top = '50%';
+                    this.mobileInput.style.left = '50%';
+                    this.mobileInput.style.transform = 'translate(-50%, -50%)';
+                    this.mobileInput.style.zIndex = '10000';
+                    this.mobileInput.style.opacity = '1';
+                    this.mobileInput.style.pointerEvents = 'auto';
+                    this.mobileInput.style.fontSize = '16px';
+                    this.mobileInput.style.padding = '10px';
+                    this.mobileInput.style.border = '2px solid #333';
+                    this.mobileInput.style.borderRadius = '5px';
+                    this.mobileInput.style.backgroundColor = 'white';
+                    this.mobileInput.style.width = '250px';
+                    this.mobileInput.style.maxLength = '15';
                     
-                    this.mobileInput.value = '';
-                    this.mobileInput.focus(); // Solo para activar teclado
+                    this.mobileInput.value = this.inputText;
+                    this.mobileInput.focus();
+                    
+                    // Listener simple solo para sincronizar
+                    this.mobileInput.oninput = (e) => {
+                        this.inputText = e.target.value.replace(/[^a-zA-Z0-9]/g, '').substring(0, 15);
+                        e.target.value = this.inputText;
+                    };
+                    
+                    // Submit con Enter
+                    this.mobileInput.onkeydown = (e) => {
+                        if (e.key === 'Enter' && this.inputText.length >= 2 && this.inputText.length <= 15) {
+                            e.preventDefault();
+                            this.hideMobileInput();
+                            this.registerPlayerAsync(this.inputText);
+                        }
+                    };
                 }
                 // En PC no hacemos nada especial aquí - el teclado ya funciona
                 return;
@@ -721,6 +746,7 @@ class FlappyGame {
             };
             
             if (this.isPointInButton(x, y, closeButton.x, closeButton.y, closeButton.width, closeButton.height)) {
+                if (this.isMobile) this.hideMobileInput();
                 this.showingRegistrationModal = false;
             }
             
@@ -1039,7 +1065,7 @@ class FlappyGame {
             
             if (result.success) {
                 console.log('✅ Registro exitoso, cerrando modal y yendo al menú');
-
+                if (this.isMobile) this.hideMobileInput();
                 this.showingRegistrationModal = false;
                 this.state = 'menu';
                 this.fetchLeaderboard(); // Cargar ranking después del registro
@@ -1055,7 +1081,14 @@ class FlappyGame {
     // MÉTODO ELIMINADO: No necesitamos listeners del input móvil
     // Ahora usamos solo el keydown del canvas para todo
     
-    // MÉTODO ELIMINADO: Ya no necesitamos ocultar/mostrar el input móvil
+    hideMobileInput() {
+        if (!this.mobileInput) return;
+        this.mobileInput.style.position = 'absolute';
+        this.mobileInput.style.left = '-9999px';
+        this.mobileInput.style.opacity = '0';
+        this.mobileInput.style.pointerEvents = 'none';
+        this.mobileInput.blur();
+    }
     
     render() {
         if (!this.assetsLoaded) {
