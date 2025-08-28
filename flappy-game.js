@@ -53,6 +53,7 @@ class FlappyGame {
         this.inputText = '';
         this.showingRanking = false;
         this.showingRegistrationModal = false;
+        this.showingGameOverModal = false;
         
         // Assets
         this.images = {};
@@ -576,14 +577,17 @@ class FlappyGame {
         return false;
     }
     
-    gameOver() {
+    async gameOver() {
         this.stopBackgroundVideo(); // Pausar el video cuando termine el juego
         this.playSound('lose');
         this.lastScore = this.score;
         
         // Enviar puntuación al servidor si el usuario está registrado
         if (this.player.isRegistered) {
-            this.submitScore(this.score);
+            await this.submitScore(this.score);
+            // Cargar ranking actualizado
+            await this.fetchLeaderboard(10);
+            this.showingGameOverModal = true;
         }
         
         this.state = 'fin';
@@ -714,31 +718,38 @@ class FlappyGame {
             
             return; // No procesar otros clicks cuando el modal está abierto
         }
+        
+        // Manejar modal de game over
+        if (this.showingGameOverModal) {
+            // Dimensiones del modal
+            const modalWidth = 400 * this.scale;
+            const modalHeight = 500 * this.scale;
+            const modalX = this.WIDTH / 2 - modalWidth / 2;
+            const modalY = this.HEIGHT / 2 - modalHeight / 2;
+            
+            // Click fuera del modal para cerrar
+            if (x < modalX || x > modalX + modalWidth || y < modalY || y > modalY + modalHeight) {
+                this.showingGameOverModal = false;
+                return;
+            }
+            
+            // Botón Cerrar (X)
+            const closeButton = {
+                x: modalX + modalWidth - 25 * this.scale,
+                y: modalY + 25 * this.scale,
+                width: 30 * this.scale,
+                height: 30 * this.scale
+            };
+            
+            if (this.isPointInButton(x, y, closeButton.x, closeButton.y, closeButton.width, closeButton.height)) {
+                this.showingGameOverModal = false;
+                return;
+            }
+            
+            return; // No procesar otros clicks cuando el modal está abierto
+        }
+        
         else if (this.state === 'menu') {
-            // Botones adicionales en la parte inferior
-            const buttonY = this.HEIGHT * 0.88;
-            const buttonSpacing = 120 * this.scale;
-            const buttonWidth = 100 * this.scale;
-            const buttonHeight = 40 * this.scale;
-            
-            // Botón Ranking
-            const rankingButtonX = this.WIDTH / 2 - buttonSpacing / 2;
-            if (x >= rankingButtonX - buttonWidth/2 && x <= rankingButtonX + buttonWidth/2 &&
-                y >= buttonY - buttonHeight/2 && y <= buttonY + buttonHeight/2) {
-                this.playSound('select');
-                this.state = 'ranking';
-                this.fetchLeaderboard(10); // Cargar top 10
-                return;
-            }
-            
-            // Botón Spotify
-            const spotifyButtonX = this.WIDTH / 2 + buttonSpacing / 2;
-            if (x >= spotifyButtonX - buttonWidth/2 && x <= spotifyButtonX + buttonWidth/2 &&
-                y >= buttonY - buttonHeight/2 && y <= buttonY + buttonHeight/2) {
-                this.openSpotify();
-                return;
-            }
-            
             // Selección de personajes - escalado dinámicamente
             const basePositions = [[100, 240], [300, 240], [100, 400], [300, 400]];
             const positions = basePositions.map(([x, y]) => [
@@ -1090,9 +1101,12 @@ class FlappyGame {
                 break;
         }
         
-        // Renderizar modal de registro si está activo
+        // Renderizar modales si están activos
         if (this.showingRegistrationModal) {
             this.renderRegistrationModal();
+        }
+        if (this.showingGameOverModal) {
+            this.renderGameOverModal();
         }
     }
     
@@ -1238,24 +1252,97 @@ class FlappyGame {
         }
     }
     
+    renderGameOverModal() {
+        // Overlay semi-transparente
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        this.ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+        
+        // Dimensiones del modal
+        const modalWidth = 400 * this.scale;
+        const modalHeight = 500 * this.scale;
+        const modalX = this.WIDTH / 2 - modalWidth / 2;
+        const modalY = this.HEIGHT / 2 - modalHeight / 2;
+        
+        // Fondo del modal
+        this.ctx.fillStyle = this.WHITE;
+        this.ctx.fillRect(modalX, modalY, modalWidth, modalHeight);
+        
+        // Borde del modal
+        this.ctx.strokeStyle = this.DARK_GRAY;
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(modalX, modalY, modalWidth, modalHeight);
+        
+        // Botón cerrar (X)
+        const closeX = modalX + modalWidth - 30 * this.scale;
+        const closeY = modalY + 15 * this.scale;
+        this.ctx.fillStyle = this.DARK_GRAY;
+        this.ctx.font = `bold ${Math.floor(20 * this.scale)}px Arial`;
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('✕', closeX, closeY + 15 * this.scale);
+        
+        // Título del modal
+        this.ctx.fillStyle = this.DARK_GRAY;
+        this.ctx.font = `bold ${Math.floor(24 * this.scale)}px Arial`;
+        this.ctx.fillText('💀 GAME OVER', this.WIDTH / 2, modalY + 50 * this.scale);
+        
+        // Tu puntuación
+        this.ctx.font = `bold ${Math.floor(20 * this.scale)}px Arial`;
+        this.ctx.fillText(`🎯 Tu puntuación: ${this.lastScore}`, this.WIDTH / 2, modalY + 90 * this.scale);
+        
+        // Título del ranking
+        this.ctx.font = `bold ${Math.floor(18 * this.scale)}px Arial`;
+        this.ctx.fillText('🏆 RANKING ACTUAL', this.WIDTH / 2, modalY + 130 * this.scale);
+        
+        // Mostrar top 5 del ranking
+        const startY = modalY + 160 * this.scale;
+        const lineHeight = 25 * this.scale;
+        
+        for (let i = 0; i < Math.min(5, this.ranking.leaderboard.length); i++) {
+            const player = this.ranking.leaderboard[i];
+            const y = startY + i * lineHeight;
+            
+            // Destacar al jugador actual
+            const isCurrentPlayer = player.playerId === this.player.id;
+            this.ctx.fillStyle = isCurrentPlayer ? this.GREEN : this.DARK_GRAY;
+            
+            // Emoji de posición
+            let medal = '';
+            if (i === 0) medal = '🥇';
+            else if (i === 1) medal = '🥈';
+            else if (i === 2) medal = '🥉';
+            else medal = `${i + 1}.`;
+            
+            this.ctx.font = `${isCurrentPlayer ? 'bold ' : ''}${Math.floor(16 * this.scale)}px Arial`;
+            this.ctx.textAlign = 'left';
+            
+            const text = `${medal} ${player.name}`;
+            this.ctx.fillText(text, modalX + 20 * this.scale, y);
+            
+            // Puntuación alineada a la derecha
+            this.ctx.textAlign = 'right';
+            this.ctx.fillText(player.score.toString(), modalX + modalWidth - 20 * this.scale, y);
+        }
+        
+        // Tu posición si no estás en el top 5
+        if (this.ranking.playerRank && this.ranking.playerRank.rank > 5) {
+            const y = startY + 6 * lineHeight;
+            this.ctx.fillStyle = this.GREEN;
+            this.ctx.font = `bold ${Math.floor(16 * this.scale)}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(`➡️ Tu posición: #${this.ranking.playerRank.rank} de ${this.ranking.totalPlayers}`, this.WIDTH / 2, y);
+        }
+        
+        // Información adicional
+        this.ctx.fillStyle = '#666';
+        this.ctx.font = `${Math.floor(12 * this.scale)}px Arial`;
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(`Total de jugadores: ${this.ranking.totalPlayers}`, this.WIDTH / 2, modalY + modalHeight - 30 * this.scale);
+        this.ctx.fillText('🖱️ Click fuera para cerrar', this.WIDTH / 2, modalY + modalHeight - 10 * this.scale);
+    }
+    
     renderMenu() {
         if (this.images.elixeoteupersonaxe) {
             this.ctx.drawImage(this.images.elixeoteupersonaxe, 0, 0, this.WIDTH, this.HEIGHT);
-        }
-        
-        // Información del usuario en la parte superior
-        this.ctx.fillStyle = this.WHITE;
-        this.ctx.font = `bold ${Math.floor(20 * this.scale)}px Arial`;
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(`👋 Hola, ${this.player.name || 'Jugador'}`, this.WIDTH / 2, this.HEIGHT * 0.1);
-        
-        // Stats del usuario
-        this.ctx.font = `${Math.floor(14 * this.scale)}px Arial`;
-        if (this.player.bestScore > 0) {
-            this.ctx.fillText(`🏅 Tu mejor puntuación: ${this.player.bestScore}`, this.WIDTH / 2, this.HEIGHT * 0.14);
-        }
-        if (this.ranking.playerRank) {
-            this.ctx.fillText(`📊 Posición global: #${this.ranking.playerRank.rank}`, this.WIDTH / 2, this.HEIGHT * 0.17);
         }
         
         const names = ['FONSO', 'MAURO', 'DIEGO', 'ROCKY'];
@@ -1286,25 +1373,6 @@ class FlappyGame {
             this.ctx.fillStyle = this.YELLOW;
             this.ctx.fillText(taglines[i], x, y + 80 * this.scale);
         }
-        
-        // Botones adicionales en la parte inferior
-        const buttonY = this.HEIGHT * 0.88;
-        const buttonSpacing = 120 * this.scale;
-        
-        // Botón Ranking
-        const rankingButtonX = this.WIDTH / 2 - buttonSpacing / 2;
-        this.ctx.fillStyle = this.GOLD;
-        this.ctx.fillRect(rankingButtonX - 50 * this.scale, buttonY - 20 * this.scale, 100 * this.scale, 40 * this.scale);
-        this.ctx.fillStyle = this.BLACK;
-        this.ctx.font = `bold ${Math.floor(12 * this.scale)}px Arial`;
-        this.ctx.fillText('🏆 RANKING', rankingButtonX, buttonY + 4 * this.scale);
-        
-        // Botón Spotify
-        const spotifyButtonX = this.WIDTH / 2 + buttonSpacing / 2;
-        this.ctx.fillStyle = this.GREEN;
-        this.ctx.fillRect(spotifyButtonX - 50 * this.scale, buttonY - 20 * this.scale, 100 * this.scale, 40 * this.scale);
-        this.ctx.fillStyle = this.WHITE;
-        this.ctx.fillText('🎵 SPOTIFY', spotifyButtonX, buttonY + 4 * this.scale);
     }
     
     renderJuego() {
