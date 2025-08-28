@@ -510,15 +510,38 @@ class FlappyGame {
     }
     
     handleClick(x, y) {
+        console.log(`👆 Click detectado en (${Math.round(x)}, ${Math.round(y)}) - Estado: ${this.state}`);
+        
         if (this.state === 'inicio') {
+            const xogarButton = {
+                x: this.WIDTH / 2,
+                y: this.HEIGHT * 0.67,
+                width: 200 * this.scale,
+                height: 60 * this.scale
+            };
+            
+            const escoitanosButton = {
+                x: this.WIDTH / 2,
+                y: this.HEIGHT * 0.8,
+                width: 200 * this.scale,
+                height: 60 * this.scale
+            };
+            
+            console.log(`🎮 Botón Xogar: centro(${Math.round(xogarButton.x)}, ${Math.round(xogarButton.y)}) tamaño(${Math.round(xogarButton.width)}x${Math.round(xogarButton.height)})`);
+            console.log(`🎵 Botón Escoitanos: centro(${Math.round(escoitanosButton.x)}, ${Math.round(escoitanosButton.y)}) tamaño(${Math.round(escoitanosButton.width)}x${Math.round(escoitanosButton.height)})`);
+            
             // Botón Xogar - escalado dinámicamente
-            if (this.isPointInButton(x, y, this.WIDTH / 2, this.HEIGHT * 0.67, 200 * this.scale, 60 * this.scale)) {
+            if (this.isPointInButton(x, y, xogarButton.x, xogarButton.y, xogarButton.width, xogarButton.height)) {
+                console.log('🎮 ¡Botón Xogar presionado!');
                 this.state = 'menu';
                 this.playMusic();
             }
             // Botón Escoitanos
-            else if (this.isPointInButton(x, y, this.WIDTH / 2, this.HEIGHT * 0.8, 200 * this.scale, 60 * this.scale)) {
+            else if (this.isPointInButton(x, y, escoitanosButton.x, escoitanosButton.y, escoitanosButton.width, escoitanosButton.height)) {
+                console.log('🎵 ¡Botón Escoitanos presionado!');
                 this.openSpotify();
+            } else {
+                console.log('❌ Click fuera de los botones');
             }
         }
         else if (this.state === 'menu') {
@@ -543,14 +566,32 @@ class FlappyGame {
             }
         }
         else if (this.state === 'fin') {
+            const xogarButton = {
+                x: this.WIDTH / 2,
+                y: this.HEIGHT * 0.67,
+                width: 200 * this.scale,
+                height: 60 * this.scale
+            };
+            
+            const escoitanosButton = {
+                x: this.WIDTH / 2,
+                y: this.HEIGHT * 0.8,
+                width: 200 * this.scale,
+                height: 60 * this.scale
+            };
+            
             // Botón Xogar de nuevo - escalado dinámicamente
-            if (this.isPointInButton(x, y, this.WIDTH / 2, this.HEIGHT * 0.67, 200 * this.scale, 60 * this.scale)) {
+            if (this.isPointInButton(x, y, xogarButton.x, xogarButton.y, xogarButton.width, xogarButton.height)) {
+                console.log('🔄 ¡Botón Xogar de nuevo presionado!');
                 this.state = 'menu';
                 this.playMusic();
             }
             // Botón Escoitanos
-            else if (this.isPointInButton(x, y, this.WIDTH / 2, this.HEIGHT * 0.8, 200 * this.scale, 60 * this.scale)) {
+            else if (this.isPointInButton(x, y, escoitanosButton.x, escoitanosButton.y, escoitanosButton.width, escoitanosButton.height)) {
+                console.log('🎵 ¡Botón Escoitanos (fin) presionado!');
                 this.openSpotify();
+            } else {
+                console.log('❌ Click fuera de los botones (estado fin)');
             }
         }
     }
@@ -561,7 +602,25 @@ class FlappyGame {
     }
     
     openSpotify() {
-        window.open('https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82', '_blank');
+        console.log('🎵 Intentando abrir Spotify...');
+        console.log('🔗 URL:', 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82');
+        
+        try {
+            const newWindow = window.open('https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82', '_blank');
+            if (newWindow) {
+                console.log('✅ Ventana de Spotify abierta correctamente');
+            } else {
+                console.warn('⚠️ window.open() devolvió null - posible bloqueo de popup');
+                // Fallback: intentar abrir en la misma ventana
+                console.log('🔄 Intentando fallback...');
+                window.location.href = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82';
+            }
+        } catch (error) {
+            console.error('❌ Error abriendo Spotify:', error);
+            // Fallback final
+            console.log('🔄 Fallback final...');
+            window.location.href = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82';
+        }
     }
     
     playSound(soundName) {
