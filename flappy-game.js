@@ -639,6 +639,12 @@ class FlappyGame {
     }
     
     handleClick(x, y) {
+        console.log('🖱️ HANDLECLICK INICIADO');
+        console.log('📝 inputText AL INICIO de handleClick:', `"${this.inputText}"`);
+        console.log('📍 Click en coordenadas:', x, y);
+        console.log('🎭 Estado actual:', this.state);
+        console.log('📱 Modal registro visible?', this.showingRegistrationModal);
+        
         if (this.state === 'inicio') {
             const xogarButton = {
                 x: this.WIDTH / 2,
@@ -698,7 +704,7 @@ class FlappyGame {
                 console.log('📱 Es móvil?', this.isMobile);
                 console.log('📝 inputText antes:', `"${this.inputText}"`);
                 
-                if (this.isMobile) {
+                if (this.isMobile && this.mobileInput && !this.mobileInput.disabled) {
                     console.log('📱 CONFIGURANDO INPUT MÓVIL...');
                     
                     // Input visible temporal para móvil
@@ -762,6 +768,7 @@ class FlappyGame {
                 console.log('📱 Es móvil?', this.isMobile);
                 console.log('📝 this.inputText:', `"${this.inputText}"`, 'longitud:', this.inputText.length);
                 console.log('🎯 mobileInput.value:', this.mobileInput ? `"${this.mobileInput.value}"` : 'N/A');
+                console.log('🔧 mobileInput.disabled:', this.mobileInput ? this.mobileInput.disabled : 'N/A');
                 
                 if (this.inputText.length >= 2 && this.inputText.length <= 15) {
                     console.log('✅ Texto válido - registrando...');
