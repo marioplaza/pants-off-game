@@ -628,6 +628,8 @@ class FlappyGame {
     }
     
     handleClick(x, y) {
+        console.log('🖱️ handleClick llamado - inputText antes:', `"${this.inputText}"`);
+        
         if (this.state === 'inicio') {
             const xogarButton = {
                 x: this.WIDTH / 2,
@@ -724,13 +726,25 @@ class FlappyGame {
             
             if (this.isPointInButton(x, y, saveButton.x, saveButton.y, saveButton.width, saveButton.height)) {
                 console.log('💾 Click en botón Guardar detectado');
-                console.log('📝 Texto actual:', this.inputText, 'Longitud:', this.inputText.length);
+                console.log('🔍 DEBUG - Estado completo:');
+                console.log('  📝 this.inputText:', `"${this.inputText}"`, 'Longitud:', this.inputText.length);
+                console.log('  📱 Es móvil?:', this.isMobile);
+                console.log('  🎯 Input móvil value:', this.mobileInput ? `"${this.mobileInput.value}"` : 'N/A');
+                console.log('  🖥️ Input móvil visible?:', this.mobileInput ? this.mobileInput.style.opacity : 'N/A');
+                
                 if (this.inputText.length >= 2 && this.inputText.length <= 15) {
                     console.log('✅ Texto válido, procediendo con registro...');
                     this.playSound('select');
                     this.registerPlayerAsync(this.inputText);
                 } else {
                     console.log('❌ Texto inválido - muy corto o muy largo');
+                    // Si el input móvil tiene contenido pero this.inputText está vacío
+                    if (this.mobileInput && this.mobileInput.value && !this.inputText) {
+                        console.log('🚨 PROBLEMA: Input móvil tiene contenido pero this.inputText está vacío');
+                        console.log('🔄 Intentando sincronizar...');
+                        this.inputText = this.mobileInput.value;
+                        console.log('📝 Después de sincronizar:', this.inputText);
+                    }
                 }
             }
             
