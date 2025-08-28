@@ -460,7 +460,6 @@ class FlappyGame {
             // Verificar recolección
             if (Math.abs(collectible.x - this.birdX) < 25 && Math.abs(collectible.y - this.birdY) < 25) {
                 collectible.active = false; // Marcar como inactivo en lugar de splice
-                console.log('🎵 Intentando reproducir pickup sound...');
                 this.playSound('pickup');
                 this.score += 5;
             } else if (collectible.x < -20) {
@@ -625,10 +624,7 @@ class FlappyGame {
     }
     
     playSound(soundName) {
-        if (!this.audioPool[soundName] || this.audioPool[soundName].length === 0) {
-            console.log(`❌ No audio pool for ${soundName}`);
-            return;
-        }
+        if (!this.audioPool[soundName] || this.audioPool[soundName].length === 0) return;
         
         // Debounce más agresivo para iOS
         const currentTime = performance.now();
@@ -636,7 +632,6 @@ class FlappyGame {
         
         if (this.lastSoundTime[soundName] && 
             currentTime - this.lastSoundTime[soundName] < minInterval) {
-            console.log(`⏱️ Audio debounced: ${soundName} (${currentTime - this.lastSoundTime[soundName]}ms ago)`);
             return; // Skip si es muy pronto
         }
         
@@ -654,9 +649,6 @@ class FlappyGame {
             // Si no hay disponible, usar la primera (interrumpir)
             if (!availableAudio) {
                 availableAudio = this.audioPool[soundName][0];
-                console.log(`🔄 No available audio, using first instance for ${soundName}`);
-            } else {
-                console.log(`✅ Found available audio instance for ${soundName}`);
             }
             
             // Preparar y reproducir
@@ -664,23 +656,14 @@ class FlappyGame {
             const playPromise = availableAudio.play();
             
             if (playPromise !== undefined) {
-                playPromise
-                    .then(() => {
-                        console.log(`🔊 Successfully played ${soundName}`);
-                    })
-                    .catch((error) => {
-                        console.log(`⚠️ Play failed for ${soundName}:`, error.message);
-                        // Intento alternativo sin resetear currentTime
-                        try {
-                            availableAudio.play()
-                                .then(() => console.log(`🔊 Retry successful for ${soundName}`))
-                                .catch(() => console.log(`❌ Retry failed for ${soundName}`));
-                        } catch (e) {
-                            console.log(`❌ Exception in retry for ${soundName}`);
-                        }
-                    });
-            } else {
-                console.log(`⚠️ Play returned undefined for ${soundName}`);
+                playPromise.catch(() => {
+                    // Intento alternativo sin resetear currentTime
+                    try {
+                        availableAudio.play().catch(() => {});
+                    } catch (e) {
+                        // Silencioso
+                    }
+                });
             }
             
             this.lastSoundTime[soundName] = currentTime;
