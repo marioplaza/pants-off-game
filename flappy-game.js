@@ -602,37 +602,31 @@ class FlappyGame {
     }
     
     openSpotify() {
-        console.log('🎵 v3.0 - Intentando abrir Spotify...');
+        console.log('🎵 v4.0 - Intentando abrir Spotify...');
         
-        // URLs para intentar
-        const spotifyAppUrl = 'spotify:artist:4fgMYzpV29Kq2DpFcO0p82'; // App directa
-        const spotifyWebUrl = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82'; // Web
+        const spotifyWebUrl = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82';
         
-        console.log('📱 Método 1: Intentando abrir app directamente');
+        console.log('🌐 Método directo: Abriendo Spotify web');
+        console.log('🔗 URL:', spotifyWebUrl);
         
-        // Crear un enlace temporal y hacer clic en él
-        const appLink = document.createElement('a');
-        appLink.href = spotifyAppUrl;
-        appLink.target = '_blank';
-        appLink.style.display = 'none';
-        document.body.appendChild(appLink);
-        appLink.click();
-        document.body.removeChild(appLink);
-        
-        console.log('✅ Click en enlace de app ejecutado');
-        
-        // Fallback: abrir web si la app no funciona
-        setTimeout(() => {
-            console.log('🌐 Fallback: abriendo versión web');
-            const webLink = document.createElement('a');
-            webLink.href = spotifyWebUrl;
-            webLink.target = '_blank';
-            webLink.style.display = 'none';
-            document.body.appendChild(webLink);
-            webLink.click();
-            document.body.removeChild(webLink);
-            console.log('✅ Click en enlace web ejecutado');
-        }, 1500);
+        try {
+            // Método más simple: usar window.open directamente
+            const newWindow = window.open(spotifyWebUrl, '_blank', 'noopener,noreferrer');
+            
+            if (newWindow) {
+                console.log('✅ Ventana abierta correctamente');
+                // En iOS, si funciona, la página web de Spotify mostrará el botón "Abrir en App"
+            } else {
+                console.warn('⚠️ window.open bloqueado, intentando método alternativo');
+                // Si window.open está bloqueado, redirigir en la misma ventana
+                window.location.href = spotifyWebUrl;
+            }
+            
+        } catch (error) {
+            console.error('❌ Error:', error);
+            console.log('🔄 Fallback: redirigiendo en misma ventana');
+            window.location.href = spotifyWebUrl;
+        }
     }
     
     playSound(soundName) {
