@@ -690,12 +690,11 @@ class FlappyGame {
                 y >= inputY && y <= inputY + inputHeight) {
                 console.log('🔍 Click en campo de texto detectado');
                 console.log('📱 Es móvil?', this.isMobile);
-                console.log('🎯 Input element:', this.mobileInput);
-                console.log('📝 Texto actual antes del click:', this.inputText);
                 
                 if (this.isMobile) {
-                    // Solo para móvil: Activar input HTML
-                    console.log('📝 Activando input móvil...');
+                    console.log('📱 MÓVIL: Activando input HTML...');
+                    console.log('📝 Texto actual antes:', this.inputText);
+                    console.log('🎯 Input antes:', this.mobileInput.value);
                     
                     // Hacer visible el input temporalmente para móvil
                     this.mobileInput.style.position = 'fixed';
@@ -714,6 +713,8 @@ class FlappyGame {
                     this.mobileInput.value = this.inputText;
                     this.mobileInput.focus();
                     this.setupMobileInputListener();
+                    
+                    console.log('✅ Input configurado - value:', this.mobileInput.value);
                 }
                 // En PC no hacemos nada especial aquí - el teclado ya funciona
                 return;
@@ -728,9 +729,28 @@ class FlappyGame {
             };
             
             if (this.isPointInButton(x, y, saveButton.x, saveButton.y, saveButton.width, saveButton.height)) {
+                console.log('💾 Click en botón Guardar detectado');
+                console.log('📱 Es móvil?', this.isMobile);
+                console.log('📝 this.inputText:', `"${this.inputText}"`, 'longitud:', this.inputText.length);
+                console.log('🎯 mobileInput.value:', this.mobileInput ? `"${this.mobileInput.value}"` : 'N/A');
+                
                 if (this.inputText.length >= 2 && this.inputText.length <= 15) {
+                    console.log('✅ Texto válido, registrando...');
                     this.playSound('select');
                     this.registerPlayerAsync(this.inputText);
+                } else {
+                    console.log('❌ Texto inválido');
+                    // Intentar sincronizar desde input móvil si está disponible
+                    if (this.isMobile && this.mobileInput && this.mobileInput.value) {
+                        console.log('🔄 Sincronizando desde input móvil...');
+                        this.inputText = this.mobileInput.value;
+                        console.log('📝 Después de sincronizar:', this.inputText);
+                        if (this.inputText.length >= 2 && this.inputText.length <= 15) {
+                            console.log('✅ Ahora es válido, registrando...');
+                            this.playSound('select');
+                            this.registerPlayerAsync(this.inputText);
+                        }
+                    }
                 }
             }
             
@@ -1085,8 +1105,10 @@ class FlappyGame {
         // Crear nuevo listener - SOLO para móvil
         this.mobileInputListener = (e) => {
             if (!this.isMobile) return; // Solo procesar en móvil
+            console.log('📱 Input móvil cambió:', e.target.value);
             this.inputText = e.target.value.replace(/[^a-zA-Z0-9]/g, '').substring(0, 15);
             e.target.value = this.inputText; // Sincronizar
+            console.log('📝 Texto sincronizado a this.inputText:', this.inputText);
         };
         
         this.mobileInput.addEventListener('input', this.mobileInputListener);
