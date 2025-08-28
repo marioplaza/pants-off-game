@@ -397,11 +397,25 @@ class FlappyGame {
         if (currentTime - this.lastFrameTime >= this.frameTime) {
             const frameStart = performance.now();
             
+            // Medir update por separado
+            const updateStart = performance.now();
             this.update();
+            const updateTime = performance.now() - updateStart;
+            
+            // Medir render por separado
+            const renderStart = performance.now();
             this.render();
+            const renderTime = performance.now() - renderStart;
             
             const frameEnd = performance.now();
-            this.updatePerformanceStats(currentTime, frameEnd - frameStart);
+            const totalFrameTime = frameEnd - frameStart;
+            
+            // Detectar frames problemáticos
+            if (totalFrameTime > 20) {
+                console.warn(`🐌 Frame lento detectado: ${totalFrameTime.toFixed(2)}ms (Update: ${updateTime.toFixed(2)}ms, Render: ${renderTime.toFixed(2)}ms)`);
+            }
+            
+            this.updatePerformanceStats(currentTime, totalFrameTime, updateTime, renderTime);
             
             this.lastFrameTime = currentTime;
         }
@@ -409,7 +423,7 @@ class FlappyGame {
         requestAnimationFrame(() => this.gameLoop());
     }
     
-    updatePerformanceStats(currentTime, frameTime) {
+    updatePerformanceStats(currentTime, frameTime, updateTime, renderTime) {
         this.performanceStats.frameCount++;
         
         // Actualizar estadísticas de frame time
@@ -421,26 +435,41 @@ class FlappyGame {
         this.performanceStats.maxFrameTime = Math.max(this.performanceStats.maxFrameTime, frameTime);
         this.performanceStats.minFrameTime = Math.min(this.performanceStats.minFrameTime, frameTime);
         
+        // Estadísticas adicionales
+        if (!this.performanceStats.updateTimes) this.performanceStats.updateTimes = [];
+        if (!this.performanceStats.renderTimes) this.performanceStats.renderTimes = [];
+        
+        this.performanceStats.updateTimes.push(updateTime);
+        this.performanceStats.renderTimes.push(renderTime);
+        
+        if (this.performanceStats.updateTimes.length > 60) this.performanceStats.updateTimes.shift();
+        if (this.performanceStats.renderTimes.length > 60) this.performanceStats.renderTimes.shift();
+        
         // Calcular FPS cada segundo
         if (currentTime - this.performanceStats.lastFpsUpdate >= 1000) {
             this.performanceStats.currentFps = this.performanceStats.frameCount;
             this.performanceStats.frameCount = 0;
             this.performanceStats.lastFpsUpdate = currentTime;
             
-            // Calcular promedio de frame time
+            // Calcular promedios
             if (this.performanceStats.frameTimeHistory.length > 0) {
                 const sum = this.performanceStats.frameTimeHistory.reduce((a, b) => a + b, 0);
                 this.performanceStats.avgFrameTime = sum / this.performanceStats.frameTimeHistory.length;
             }
             
-            // Log de rendimiento cada 3 segundos
+            const avgUpdateTime = this.performanceStats.updateTimes.length > 0 ? 
+                this.performanceStats.updateTimes.reduce((a, b) => a + b, 0) / this.performanceStats.updateTimes.length : 0;
+            const avgRenderTime = this.performanceStats.renderTimes.length > 0 ? 
+                this.performanceStats.renderTimes.reduce((a, b) => a + b, 0) / this.performanceStats.renderTimes.length : 0;
+            
+            // Log de rendimiento cada segundo
             if (this.performanceStats.currentFps > 0) {
                 console.log(`📊 Performance Stats:`);
                 console.log(`   FPS: ${this.performanceStats.currentFps}`);
                 console.log(`   Avg Frame Time: ${this.performanceStats.avgFrameTime.toFixed(2)}ms`);
                 console.log(`   Max Frame Time: ${this.performanceStats.maxFrameTime.toFixed(2)}ms`);
+                console.log(`   Avg Update: ${avgUpdateTime.toFixed(2)}ms, Avg Render: ${avgRenderTime.toFixed(2)}ms`);
                 console.log(`   Canvas Size: ${this.WIDTH}x${this.HEIGHT}`);
-                console.log(`   Canvas Internal: ${this.canvas.width}x${this.canvas.height}`);
                 console.log(`   Device Pixel Ratio: ${this.devicePixelRatio || 1}`);
                 console.log(`   Total Pixels: ${(this.canvas.width * this.canvas.height / 1000000).toFixed(1)}M`);
                 
