@@ -247,12 +247,7 @@ class FlappyGame {
                     e.preventDefault();
                     if (this.inputText.length < 15) {
                         this.inputText += e.key;
-                        console.log('📝 Añadida letra:', e.key, '- Texto después:', this.inputText);
-                    } else {
-                        console.log('❌ Texto demasiado largo, no se añade:', e.key);
                     }
-                } else {
-                    console.log('❓ Tecla no manejada:', e.key);
                 }
             } else if (e.code === 'Space') {
                 e.preventDefault();
@@ -685,13 +680,7 @@ class FlappyGame {
             
             if (x >= inputX && x <= inputX + inputWidth && 
                 y >= inputY && y <= inputY + inputHeight) {
-                console.log('🔍 Click en campo de texto detectado');
-                console.log('📱 Es móvil?', this.isMobile);
-                
                 if (this.isMobile) {
-                    console.log('📱 MÓVIL: Activando input HTML invisible para teclado...');
-                    console.log('📝 Texto actual antes:', this.inputText);
-                    
                     // Input invisible pero focusable para activar teclado virtual
                     this.mobileInput.style.position = 'fixed';
                     this.mobileInput.style.top = '-1000px'; // Fuera de pantalla
@@ -702,8 +691,6 @@ class FlappyGame {
                     
                     this.mobileInput.value = '';
                     this.mobileInput.focus(); // Solo para activar teclado
-                    
-                    console.log('✅ Teclado virtual activado - usando keydown del canvas');
                 }
                 // En PC no hacemos nada especial aquí - el teclado ya funciona
                 return;
@@ -718,28 +705,10 @@ class FlappyGame {
             };
             
             if (this.isPointInButton(x, y, saveButton.x, saveButton.y, saveButton.width, saveButton.height)) {
-                console.log('💾 Click en botón Guardar detectado');
-                console.log('📱 Es móvil?', this.isMobile);
-                console.log('📝 this.inputText:', `"${this.inputText}"`, 'longitud:', this.inputText.length);
-                console.log('🎯 mobileInput.value:', this.mobileInput ? `"${this.mobileInput.value}"` : 'N/A');
                 
                 if (this.inputText.length >= 2 && this.inputText.length <= 15) {
-                    console.log('✅ Texto válido, registrando...');
                     this.playSound('select');
                     this.registerPlayerAsync(this.inputText);
-                } else {
-                    console.log('❌ Texto inválido');
-                    // Intentar sincronizar desde input móvil si está disponible
-                    if (this.isMobile && this.mobileInput && this.mobileInput.value) {
-                        console.log('🔄 Sincronizando desde input móvil...');
-                        this.inputText = this.mobileInput.value;
-                        console.log('📝 Después de sincronizar:', this.inputText);
-                        if (this.inputText.length >= 2 && this.inputText.length <= 15) {
-                            console.log('✅ Ahora es válido, registrando...');
-                            this.playSound('select');
-                            this.registerPlayerAsync(this.inputText);
-                        }
-                    }
                 }
             }
             
@@ -1083,58 +1052,10 @@ class FlappyGame {
         }
     }
     
-    setupMobileInputListener() {
-        
-        // Remover listener anterior si existe
-        if (this.mobileInputListener) {
-            this.mobileInput.removeEventListener('input', this.mobileInputListener);
-        }
-        
-        // Crear nuevo listener - SOLO para móvil
-        this.mobileInputListener = (e) => {
-            if (!this.isMobile) return; // Solo procesar en móvil
-            console.log('📱 Input móvil cambió:', e.target.value);
-            this.inputText = e.target.value.replace(/[^a-zA-Z0-9]/g, '').substring(0, 15);
-            e.target.value = this.inputText; // Sincronizar
-            console.log('📝 Texto sincronizado a this.inputText:', this.inputText);
-        };
-        
-        this.mobileInput.addEventListener('input', this.mobileInputListener);
-        
-        // Auto-submit al presionar Enter
-        const enterListener = (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (this.inputText.length >= 2 && this.inputText.length <= 15) {
-                    this.hideMobileInput();
-                    this.registerPlayerAsync(this.inputText);
-                }
-                this.mobileInput.removeEventListener('keydown', enterListener);
-            }
-        };
-        
-        // Ocultar input al perder focus
-        const blurListener = () => {
-            console.log('📱 Input móvil perdió focus');
-            setTimeout(() => {
-                this.hideMobileInput();
-            }, 100);
-        };
-        
-        this.mobileInput.addEventListener('keydown', enterListener);
-        this.mobileInput.addEventListener('blur', blurListener);
-        console.log('✅ Listeners configurados');
-    }
+    // MÉTODO ELIMINADO: No necesitamos listeners del input móvil
+    // Ahora usamos solo el keydown del canvas para todo
     
-    hideMobileInput() {
-        if (!this.mobileInput) return; // Si no existe el elemento, salir
-        console.log('🙈 Ocultando input móvil');
-        this.mobileInput.style.position = 'absolute';
-        this.mobileInput.style.left = '-9999px';
-        this.mobileInput.style.opacity = '0';
-        this.mobileInput.style.pointerEvents = 'none';
-        this.mobileInput.blur();
-    }
+    // MÉTODO ELIMINADO: Ya no necesitamos ocultar/mostrar el input móvil
     
     render() {
         if (!this.assetsLoaded) {
@@ -1246,8 +1167,7 @@ class FlappyGame {
         
         // Título del modal
         this.ctx.fillStyle = this.DARK_GRAY;
-        this.ctx.font = `bold ${Math.floor(24 * this.scale)}px Arial`;
-        this.ctx.fillText('🎸 PANTS OFF BAND', this.WIDTH / 2, modalY + 60 * this.scale);
+   
         
         // Subtítulo
         this.ctx.font = `${Math.floor(18 * this.scale)}px Arial`;
