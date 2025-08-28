@@ -211,7 +211,24 @@ class FlappyGame {
         // Teclado
         document.addEventListener('keydown', (e) => {
             this.keys[e.code] = true;
-            if (e.code === 'Space') {
+            
+            if (this.state === 'registro') {
+                // Manejar input de texto para registro
+                if (e.key === 'Backspace') {
+                    e.preventDefault();
+                    this.inputText = this.inputText.slice(0, -1);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (this.inputText.length >= 2 && this.inputText.length <= 15) {
+                        this.registerPlayerAsync(this.inputText);
+                    }
+                } else if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
+                    e.preventDefault();
+                    if (this.inputText.length < 15) {
+                        this.inputText += e.key;
+                    }
+                }
+            } else if (e.code === 'Space') {
                 e.preventDefault();
                 if (this.state === 'jugando') {
                     this.velocity = this.jump;
@@ -600,14 +617,37 @@ class FlappyGame {
                 height: 60 * this.scale
             };
             
-            // Botón Xogar - escalado dinámicamente
+            // Botón Xogar - verificar si usuario está registrado
             if (this.isPointInButton(x, y, xogarButton.x, xogarButton.y, xogarButton.width, xogarButton.height)) {
-                this.state = 'menu';
+                this.playSound('select');
+                if (this.player.isRegistered) {
+                    this.state = 'menu';
+                    this.fetchLeaderboard(); // Cargar ranking actual
+                } else {
+                    this.state = 'registro';
+                    this.inputText = '';
+                }
                 this.stopBackgroundVideo(); // Pausar video al volver al menú
             }
             // Botón Escoitanos
             else if (this.isPointInButton(x, y, escoitanosButton.x, escoitanosButton.y, escoitanosButton.width, escoitanosButton.height)) {
                 this.openSpotify();
+            }
+        }
+        else if (this.state === 'registro') {
+            // Botón Guardar
+            const saveButton = {
+                x: this.WIDTH / 2,
+                y: this.HEIGHT * 0.75,
+                width: 180 * this.scale,
+                height: 50 * this.scale
+            };
+            
+            if (this.isPointInButton(x, y, saveButton.x, saveButton.y, saveButton.width, saveButton.height)) {
+                if (this.inputText.length >= 2 && this.inputText.length <= 15) {
+                    this.playSound('select');
+                    this.registerPlayerAsync(this.inputText);
+                }
             }
         }
         else if (this.state === 'menu') {
@@ -883,6 +923,21 @@ class FlappyGame {
         return null;
     }
     
+    async registerPlayerAsync(playerName) {
+        try {
+            const result = await this.registerPlayer(playerName);
+            if (result.success) {
+                this.state = 'menu';
+                this.fetchLeaderboard(); // Cargar ranking después del registro
+            } else {
+                // Mostrar error (por ahora solo console)
+                console.error('Error registering player:', result.error);
+            }
+        } catch (error) {
+            console.error('Error in registerPlayerAsync:', error);
+        }
+    }
+    
     render() {
         if (!this.assetsLoaded) {
             this.renderLoading();
@@ -956,6 +1011,76 @@ class FlappyGame {
         
         this.drawButton(this.images.xogar, this.WIDTH / 2, this.HEIGHT * 0.67);
         this.drawButton(this.images.escoitanos, this.WIDTH / 2, this.HEIGHT * 0.8);
+    }
+    
+    renderRegistro() {
+        // Fondo
+        if (this.images.fondo) {
+            this.ctx.drawImage(this.images.fondo, 0, 0, this.WIDTH, this.HEIGHT);
+        }
+        
+        // Título
+        this.ctx.fillStyle = this.WHITE;
+        this.ctx.font = `bold ${Math.floor(32 * this.scale)}px Arial`;
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('🎸 BANDA FLAPPY', this.WIDTH / 2, this.HEIGHT * 0.2);
+        
+        // Subtítulo
+        this.ctx.font = `${Math.floor(24 * this.scale)}px Arial`;
+        this.ctx.fillText('👤 ¡Bienvenido/a nuevo jugador!', this.WIDTH / 2, this.HEIGHT * 0.35);
+        
+        // Instrucción
+        this.ctx.font = `${Math.floor(18 * this.scale)}px Arial`;
+        this.ctx.fillText('📝 Introduce tu nombre:', this.WIDTH / 2, this.HEIGHT * 0.48);
+        
+        // Campo de texto
+        const inputWidth = 300 * this.scale;
+        const inputHeight = 50 * this.scale;
+        const inputX = this.WIDTH / 2 - inputWidth / 2;
+        const inputY = this.HEIGHT * 0.55 - inputHeight / 2;
+        
+        // Fondo del input
+        this.ctx.fillStyle = this.WHITE;
+        this.ctx.fillRect(inputX, inputY, inputWidth, inputHeight);
+        
+        // Borde del input
+        this.ctx.strokeStyle = this.DARK_GRAY;
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(inputX, inputY, inputWidth, inputHeight);
+        
+        // Texto del input
+        this.ctx.fillStyle = this.BLACK;
+        this.ctx.font = `${Math.floor(20 * this.scale)}px Arial`;
+        this.ctx.textAlign = 'left';
+        this.ctx.fillText(this.inputText, inputX + 10 * this.scale, inputY + inputHeight / 2 + 7 * this.scale);
+        
+        // Cursor parpadeante
+        if (Math.floor(Date.now() / 500) % 2) {
+            const textWidth = this.ctx.measureText(this.inputText).width;
+            this.ctx.fillRect(inputX + 10 * this.scale + textWidth + 2, inputY + 10 * this.scale, 2, inputHeight - 20 * this.scale);
+        }
+        
+        // Botón Guardar
+        const buttonY = this.HEIGHT * 0.75;
+        const buttonEnabled = this.inputText.length >= 2 && this.inputText.length <= 15;
+        
+        // Fondo del botón
+        this.ctx.fillStyle = buttonEnabled ? this.GREEN : this.DARK_GRAY;
+        const buttonWidth = 180 * this.scale;
+        const buttonHeight = 50 * this.scale;
+        this.ctx.fillRect(this.WIDTH / 2 - buttonWidth / 2, buttonY - buttonHeight / 2, buttonWidth, buttonHeight);
+        
+        // Texto del botón
+        this.ctx.fillStyle = this.WHITE;
+        this.ctx.font = `bold ${Math.floor(18 * this.scale)}px Arial`;
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('💾 GUARDAR Y JUGAR', this.WIDTH / 2, buttonY + 6 * this.scale);
+        
+        // Información
+        this.ctx.fillStyle = this.WHITE;
+        this.ctx.font = `${Math.floor(14 * this.scale)}px Arial`;
+        this.ctx.fillText('ℹ️ Solo una vez, se guarda automáticamente', this.WIDTH / 2, this.HEIGHT * 0.9);
+        this.ctx.fillText(`(${this.inputText.length}/15 caracteres)`, this.WIDTH / 2, this.HEIGHT * 0.95);
     }
     
     renderMenu() {
