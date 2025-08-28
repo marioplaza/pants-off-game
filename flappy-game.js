@@ -687,6 +687,11 @@ class FlappyGame {
             
             // Click fuera del modal para cerrar
             if (x < modalX || x > modalX + modalWidth || y < modalY || y > modalY + modalHeight) {
+                console.log('🚨 CLICK FUERA DEL MODAL - CERRANDO');
+                console.log('📍 Click:', x, y);
+                console.log('📦 Modal bounds:', modalX, modalY, modalX + modalWidth, modalY + modalHeight);
+                console.log('📝 inputText antes de cerrar:', `"${this.inputText}"`);
+                
                 if (this.isMobile) this.hideMobileInput();
                 this.showingRegistrationModal = false;
                 return;
@@ -762,6 +767,9 @@ class FlappyGame {
                 width: 180 * this.scale,
                 height: 50 * this.scale
             };
+            
+            console.log('🔍 JUSTO ANTES DE VERIFICAR BOTÓN GUARDAR');
+            console.log('📝 inputText aquí:', `"${this.inputText}"`);
             
             if (this.isPointInButton(x, y, saveButton.x, saveButton.y, saveButton.width, saveButton.height)) {
                 console.log('💾 CLICK EN BOTÓN GUARDAR');
