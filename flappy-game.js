@@ -252,8 +252,7 @@ class FlappyGame {
     }
     
     loadAssets() {
-        console.log('🚀 === FLAPPY GAME v2.0 - iOS FIX === 🚀');
-        console.log('🎮 Iniciando carga de assets...');
+        console.log('🎮 Iniciando carga de assets en v2.0...');
         console.log('📱 User Agent:', navigator.userAgent);
         console.log('🖼️ WEBP Support:', this.supportsWebP());
         
