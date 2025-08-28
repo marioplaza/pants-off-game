@@ -219,17 +219,21 @@ class FlappyGame {
             this.keys[e.code] = true;
             
             if (this.showingRegistrationModal) {
-                console.log('⌨️ Tecla presionada en modal:', e.key);
+                console.log('⌨️ Tecla presionada en modal:', e.key, 'Code:', e.code);
+                console.log('🎯 Estado antes:', 'inputText="' + this.inputText + '"', 'longitud:', this.inputText.length);
+                
                 // Manejar input de texto para registro
                 if (e.key === 'Backspace') {
                     e.preventDefault();
                     this.inputText = this.inputText.slice(0, -1);
-                    console.log('🔙 Backspace - Texto actual:', this.inputText);
+                    console.log('🔙 Backspace - Texto después:', this.inputText);
                 } else if (e.key === 'Enter') {
                     e.preventDefault();
                     console.log('↩️ Enter presionado - Texto:', this.inputText, 'Longitud:', this.inputText.length);
                     if (this.inputText.length >= 2 && this.inputText.length <= 15) {
                         this.registerPlayerAsync(this.inputText);
+                    } else {
+                        console.log('❌ Texto muy corto o muy largo para Enter');
                     }
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
@@ -239,8 +243,12 @@ class FlappyGame {
                     e.preventDefault();
                     if (this.inputText.length < 15) {
                         this.inputText += e.key;
-                        console.log('📝 Añadida letra:', e.key, '- Texto actual:', this.inputText);
+                        console.log('📝 Añadida letra:', e.key, '- Texto después:', this.inputText);
+                    } else {
+                        console.log('❌ Texto demasiado largo, no se añade:', e.key);
                     }
+                } else {
+                    console.log('❓ Tecla no manejada:', e.key);
                 }
             } else if (e.code === 'Space') {
                 e.preventDefault();
@@ -676,6 +684,7 @@ class FlappyGame {
                 console.log('🔍 Click en campo de texto detectado');
                 console.log('📱 Es móvil?', this.isMobile);
                 console.log('🎯 Input element:', this.mobileInput);
+                console.log('📝 Texto actual antes del click:', this.inputText);
                 
                 if (this.isMobile) {
                     // Activar input móvil
@@ -685,6 +694,10 @@ class FlappyGame {
                     this.setupMobileInputListener();
                 } else {
                     console.log('💻 Modo PC - input por teclado');
+                    console.log('💡 Puedes escribir directamente con el teclado');
+                    // En PC, el input se maneja por eventos de teclado
+                    // Asegurar que el modal tiene foco para los eventos
+                    this.canvas.focus();
                 }
                 return;
             }
