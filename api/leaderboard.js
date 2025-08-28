@@ -23,7 +23,8 @@ export default async function handler(req, res) {
     const limitNum = Math.min(parseInt(limit), 50); // Máximo 50
 
     // Obtener top jugadores del leaderboard
-    const topPlayers = await redis.zrevrange('global_leaderboard', 0, limitNum - 1, {
+    const topPlayers = await redis.zrange('global_leaderboard', 0, limitNum - 1, {
+      rev: true,
       withScores: true
     });
 
@@ -49,10 +50,11 @@ export default async function handler(req, res) {
     // Si se proporciona playerId, incluir su posición
     let playerRank = null;
     if (playerId) {
-      const rank = await redis.zrevrank('global_leaderboard', playerId);
+      const rank = await redis.zrank('global_leaderboard', playerId);
       if (rank !== null) {
+        const totalPlayers = await redis.zcard('global_leaderboard');
         playerRank = {
-          rank: rank + 1,
+          rank: totalPlayers - rank, // Convertir a ranking descendente
           playerId
         };
       }

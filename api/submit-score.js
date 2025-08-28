@@ -53,14 +53,15 @@ export default async function handler(req, res) {
     await redis.hset(`player:${playerId}`, updatedData);
 
     // Obtener posición actual en el ranking
-    const rank = await redis.zrevrank('global_leaderboard', playerId);
+    const rank = await redis.zrank('global_leaderboard', playerId);
     const totalPlayers = await redis.zcard('global_leaderboard');
+    const actualRank = rank !== null ? totalPlayers - rank : null;
 
     res.status(200).json({ 
       success: true,
       newRecord: score > currentBest,
       bestScore: Math.max(score, currentBest),
-      rank: rank !== null ? rank + 1 : null,
+      rank: actualRank,
       totalPlayers,
       message: score > currentBest ? '¡Nuevo récord personal!' : 'Partida registrada'
     });
