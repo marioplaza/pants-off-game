@@ -252,6 +252,7 @@ class FlappyGame {
     }
     
     loadAssets() {
+        console.log('🚀 === FLAPPY GAME v2.0 - iOS FIX === 🚀');
         console.log('🎮 Iniciando carga de assets...');
         console.log('📱 User Agent:', navigator.userAgent);
         console.log('🖼️ WEBP Support:', this.supportsWebP());
@@ -292,20 +293,46 @@ class FlappyGame {
             this.images[filename.split('.')[0]] = img;
         });
         
-        // Cargar sonidos
+        // Cargar sonidos con manejo especial para iOS
         soundFiles.forEach(filename => {
-            console.log(`🔊 Cargando sonido: ${filename}`);
+            console.log(`🔊 Cargando sonido: ${filename}`); 
             const audio = new Audio();
-            audio.oncanplaythrough = () => {
-                console.log(`✅ Sonido cargado: ${filename}`);
-                this.assetLoaded();
+            
+            let audioLoaded = false;
+            
+            // Múltiples eventos para asegurar detección de carga
+            const markAudioLoaded = () => {
+                if (!audioLoaded) {
+                    audioLoaded = true;
+                    console.log(`✅ Sonido cargado: ${filename}`);
+                    this.assetLoaded();
+                }
             };
+            
+            audio.oncanplaythrough = markAudioLoaded;
+            audio.onloadeddata = markAudioLoaded;
+            audio.oncanplay = markAudioLoaded;
+            
             audio.onerror = (e) => {
                 console.error(`❌ Error cargando sonido: ${filename}`, e);
-                this.assetLoaded();
+                if (!audioLoaded) {
+                    audioLoaded = true;
+                    this.assetLoaded(); // Continuar aunque falle
+                }
             };
+            
+            // Timeout para iOS - si no carga en 3 segundos, continuar
+            setTimeout(() => {
+                if (!audioLoaded) {
+                    console.warn(`⏰ Timeout cargando sonido: ${filename} (continuando...)`);
+                    audioLoaded = true;
+                    this.assetLoaded();
+                }
+            }, 3000);
+            
             audio.src = `assets/sounds/${filename}`;
             audio.volume = filename === 'cancion.mp3' ? 0.2 : 0.1;
+            audio.preload = 'auto';
             this.sounds[filename.split('.')[0]] = audio;
         });
     }
@@ -540,8 +567,14 @@ class FlappyGame {
     
     playSound(soundName) {
         if (this.sounds[soundName]) {
-            this.sounds[soundName].currentTime = 0;
-            this.sounds[soundName].play().catch(e => console.log('Error reproduciendo sonido:', e));
+            try {
+                this.sounds[soundName].currentTime = 0;
+                this.sounds[soundName].play().catch(e => console.log(`🔇 Error reproduciendo sonido ${soundName}:`, e));
+            } catch (e) {
+                console.log(`🔇 Error preparando sonido ${soundName}:`, e);
+            }
+        } else {
+            console.log(`🔇 Sonido no disponible: ${soundName}`);
         }
     }
     
