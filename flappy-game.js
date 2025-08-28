@@ -140,8 +140,10 @@ class FlappyGame {
         this.WIDTH = canvasWidth;
         this.HEIGHT = canvasHeight;
         
-        // Configurar canvas con devicePixelRatio para pantallas de alta densidad
-        const dpr = window.devicePixelRatio || 1;
+        // Optimización para rendimiento: limitar devicePixelRatio en pantallas muy densas
+        const dpr = Math.min(window.devicePixelRatio || 1, 2); // Máximo 2x para mejor rendimiento
+        
+        console.log(`🔧 DPR original: ${window.devicePixelRatio}, DPR usado: ${dpr}`);
         
         // Establecer el tamaño real del canvas (buffer interno)
         this.canvas.width = this.WIDTH * dpr;
@@ -157,9 +159,9 @@ class FlappyGame {
         // Guardar el devicePixelRatio para uso posterior
         this.devicePixelRatio = dpr;
         
-        // Para iOS, asegurar que el contexto esté configurado correctamente
+        // Configuración optimizada para rendimiento
         this.ctx.imageSmoothingEnabled = true;
-        this.ctx.imageSmoothingQuality = 'high';
+        this.ctx.imageSmoothingQuality = 'medium'; // 'high' es más lento
     }
     
     init() {
@@ -430,14 +432,16 @@ class FlappyGame {
                 this.performanceStats.avgFrameTime = sum / this.performanceStats.frameTimeHistory.length;
             }
             
-            // Log de rendimiento cada 5 segundos
-            if (this.performanceStats.frameCount % 5 === 0) {
+            // Log de rendimiento cada 5 segundos (corregido)
+            if (Math.floor(currentTime / 5000) > Math.floor(this.performanceStats.lastFpsUpdate / 5000)) {
                 console.log(`📊 Performance Stats:`);
                 console.log(`   FPS: ${this.performanceStats.currentFps}`);
                 console.log(`   Avg Frame Time: ${this.performanceStats.avgFrameTime.toFixed(2)}ms`);
                 console.log(`   Max Frame Time: ${this.performanceStats.maxFrameTime.toFixed(2)}ms`);
                 console.log(`   Canvas Size: ${this.WIDTH}x${this.HEIGHT}`);
+                console.log(`   Canvas Internal: ${this.canvas.width}x${this.canvas.height}`);
                 console.log(`   Device Pixel Ratio: ${this.devicePixelRatio || 1}`);
+                console.log(`   Total Pixels: ${(this.canvas.width * this.canvas.height / 1000000).toFixed(1)}M`);
             }
         }
     }
