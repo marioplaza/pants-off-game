@@ -602,53 +602,37 @@ class FlappyGame {
     }
     
     openSpotify() {
-        console.log('🎵 Intentando abrir Spotify...');
+        console.log('🎵 v3.0 - Intentando abrir Spotify...');
         
-        // URLs para intentar (en orden de preferencia)
-        const spotifyAppUrl = 'spotify:artist:4fgMYzpV29Kq2DpFcO0p82'; // Abre la app directamente
-        const spotifyWebUrl = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82'; // Fallback web
+        // URLs para intentar
+        const spotifyAppUrl = 'spotify:artist:4fgMYzpV29Kq2DpFcO0p82'; // App directa
+        const spotifyWebUrl = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82'; // Web
         
-        console.log('📱 Intentando abrir app de Spotify:', spotifyAppUrl);
+        console.log('📱 Método 1: Intentando abrir app directamente');
         
-        try {
-            // Crear un iframe invisible para intentar abrir la app
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = spotifyAppUrl;
-            document.body.appendChild(iframe);
-            
-            // Si la app no se abre en 1.5 segundos, abrir la versión web
-            let fallbackExecuted = false;
-            const fallbackTimeout = setTimeout(() => {
-                if (!fallbackExecuted) {
-                    fallbackExecuted = true;
-                    console.log('🌐 App no detectada, abriendo versión web de Spotify');
-                    console.log('🔗 URL web:', spotifyWebUrl);
-                    window.open(spotifyWebUrl, '_blank');
-                }
-                document.body.removeChild(iframe);
-            }, 1500);
-            
-            // Detectar si el usuario sale de la página (indica que la app se abrió)
-            const handleVisibilityChange = () => {
-                if (document.hidden && !fallbackExecuted) {
-                    fallbackExecuted = true;
-                    clearTimeout(fallbackTimeout);
-                    console.log('✅ App de Spotify abierta correctamente');
-                    document.body.removeChild(iframe);
-                    document.removeEventListener('visibilitychange', handleVisibilityChange);
-                }
-            };
-            
-            document.addEventListener('visibilitychange', handleVisibilityChange);
-            
-            console.log('✅ Intento de abrir app de Spotify ejecutado');
-            
-        } catch (error) {
-            console.error('❌ Error abriendo Spotify:', error);
-            console.log('🔄 Fallback directo a web...');
-            window.open(spotifyWebUrl, '_blank');
-        }
+        // Crear un enlace temporal y hacer clic en él
+        const appLink = document.createElement('a');
+        appLink.href = spotifyAppUrl;
+        appLink.target = '_blank';
+        appLink.style.display = 'none';
+        document.body.appendChild(appLink);
+        appLink.click();
+        document.body.removeChild(appLink);
+        
+        console.log('✅ Click en enlace de app ejecutado');
+        
+        // Fallback: abrir web si la app no funciona
+        setTimeout(() => {
+            console.log('🌐 Fallback: abriendo versión web');
+            const webLink = document.createElement('a');
+            webLink.href = spotifyWebUrl;
+            webLink.target = '_blank';
+            webLink.style.display = 'none';
+            document.body.appendChild(webLink);
+            webLink.click();
+            document.body.removeChild(webLink);
+            console.log('✅ Click en enlace web ejecutado');
+        }, 1500);
     }
     
     playSound(soundName) {
