@@ -238,6 +238,7 @@ class FlappyGame {
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
                     console.log('🚫 ESC - Cerrando modal');
+                    this.hideMobileInput();
                     this.showingRegistrationModal = false;
                 } else if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
                     e.preventDefault();
@@ -669,6 +670,7 @@ class FlappyGame {
             
             // Click fuera del modal para cerrar
             if (x < modalX || x > modalX + modalWidth || y < modalY || y > modalY + modalHeight) {
+                this.hideMobileInput();
                 this.showingRegistrationModal = false;
                 return;
             }
@@ -689,6 +691,21 @@ class FlappyGame {
                 if (this.isMobile) {
                     // Activar input móvil
                     console.log('📝 Activando input móvil...');
+                    
+                    // Hacer visible el input temporalmente para móvil
+                    this.mobileInput.style.position = 'fixed';
+                    this.mobileInput.style.top = '50%';
+                    this.mobileInput.style.left = '50%';
+                    this.mobileInput.style.transform = 'translate(-50%, -50%)';
+                    this.mobileInput.style.zIndex = '10000';
+                    this.mobileInput.style.opacity = '1';
+                    this.mobileInput.style.pointerEvents = 'auto';
+                    this.mobileInput.style.fontSize = '16px';
+                    this.mobileInput.style.padding = '10px';
+                    this.mobileInput.style.border = '2px solid #333';
+                    this.mobileInput.style.borderRadius = '5px';
+                    this.mobileInput.style.backgroundColor = 'white';
+                    
                     this.mobileInput.value = this.inputText;
                     this.mobileInput.focus();
                     this.setupMobileInputListener();
@@ -731,6 +748,7 @@ class FlappyGame {
             };
             
             if (this.isPointInButton(x, y, closeButton.x, closeButton.y, closeButton.width, closeButton.height)) {
+                this.hideMobileInput();
                 this.showingRegistrationModal = false;
             }
             
@@ -1049,6 +1067,7 @@ class FlappyGame {
             
             if (result.success) {
                 console.log('✅ Registro exitoso, cerrando modal y yendo al menú');
+                this.hideMobileInput(); // Ocultar input móvil si estaba visible
                 this.showingRegistrationModal = false;
                 this.state = 'menu';
                 this.fetchLeaderboard(); // Cargar ranking después del registro
@@ -1086,15 +1105,33 @@ class FlappyGame {
                 e.preventDefault();
                 console.log('↩️ Enter en input móvil - Registrando...');
                 if (this.inputText.length >= 2 && this.inputText.length <= 15) {
-                    this.mobileInput.blur(); // Cerrar teclado
+                    this.hideMobileInput();
                     this.registerPlayerAsync(this.inputText);
                 }
                 this.mobileInput.removeEventListener('keydown', enterListener);
             }
         };
         
+        // Ocultar input al perder focus
+        const blurListener = () => {
+            console.log('📱 Input móvil perdió focus');
+            setTimeout(() => {
+                this.hideMobileInput();
+            }, 100);
+        };
+        
         this.mobileInput.addEventListener('keydown', enterListener);
+        this.mobileInput.addEventListener('blur', blurListener);
         console.log('✅ Listeners configurados');
+    }
+    
+    hideMobileInput() {
+        console.log('🙈 Ocultando input móvil');
+        this.mobileInput.style.position = 'absolute';
+        this.mobileInput.style.left = '-9999px';
+        this.mobileInput.style.opacity = '0';
+        this.mobileInput.style.pointerEvents = 'none';
+        this.mobileInput.blur();
     }
     
     render() {
@@ -1332,7 +1369,7 @@ class FlappyGame {
             if (i === 0) medal = '🥇';
             else if (i === 1) medal = '🥈';
             else if (i === 2) medal = '🥉';
-            else medal = `${i + 1}.`;
+            else medal = `🎖️`;
             
             this.ctx.font = `${isCurrentPlayer ? 'bold ' : ''}${Math.floor(16 * this.scale)}px Arial`;
             this.ctx.textAlign = 'left';
