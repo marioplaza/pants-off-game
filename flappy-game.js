@@ -85,6 +85,10 @@ class FlappyGame {
         this.audioPool = {}; // Pool de múltiples instancias de audio
         this.maxAudioInstances = 3; // Máximo 3 instancias por sonido
         
+        // Video de fondo
+        this.backgroundVideo = document.getElementById('background-video');
+        this.videoLoaded = false;
+        
         this.init();
     }
     
@@ -271,11 +275,11 @@ class FlappyGame {
         const soundFiles = [
             supportsOgg ? 'select.ogg' : 'select.wav',
             supportsOgg ? 'pickup.ogg' : 'pickup.wav',
-            supportsOgg ? 'lose.ogg' : 'lose.wav',
-            'cancion.mp3'  // MP3 tiene soporte universal
+            supportsOgg ? 'lose.ogg' : 'lose.wav'
+            // Música eliminada - ahora usamos video de fondo
         ];
         
-        this.assetsToLoad = imageFiles.length + soundFiles.length;
+        this.assetsToLoad = imageFiles.length + soundFiles.length + 1; // +1 para el video
         
         // Cargar imágenes
         imageFiles.forEach(filename => {
@@ -289,8 +293,7 @@ class FlappyGame {
                 // Cargar sonidos con manejo especial para iOS
         soundFiles.forEach(filename => {
             const soundName = filename.split('.')[0];
-            const isMusic = filename === 'cancion.mp3';
-            const poolSize = isMusic ? 1 : this.maxAudioInstances; // Solo 1 instancia para música
+            const poolSize = this.maxAudioInstances; // Todas son efectos de sonido ahora
             
             this.audioPool[soundName] = [];
             
@@ -334,7 +337,7 @@ class FlappyGame {
                 }, 1000);
                 
                 audio.src = `assets/sounds/${filename}`;
-                audio.volume = isMusic ? 0.2 : 0.1;
+                audio.volume = 0.1; // Todos son efectos de sonido
                 audio.preload = 'auto';
                 
                 this.audioPool[soundName].push(audio);
@@ -345,6 +348,33 @@ class FlappyGame {
                 }
             }
         });
+        
+        // Cargar video de fondo
+        if (this.backgroundVideo) {
+            const onVideoLoaded = () => {
+                if (!this.videoLoaded) {
+                    this.videoLoaded = true;
+                    this.assetLoaded();
+                }
+            };
+            
+            this.backgroundVideo.addEventListener('canplaythrough', onVideoLoaded);
+            this.backgroundVideo.addEventListener('loadeddata', onVideoLoaded);
+            
+            // Timeout para continuar si el video no carga
+            setTimeout(() => {
+                if (!this.videoLoaded) {
+                    this.videoLoaded = true;
+                    this.assetLoaded();
+                }
+            }, 3000);
+            
+            // Iniciar carga del video
+            this.backgroundVideo.load();
+        } else {
+            // Si no hay video, marcar como cargado
+            this.assetLoaded();
+        }
     }
     
     assetLoaded() {
@@ -500,7 +530,7 @@ class FlappyGame {
     }
     
     gameOver() {
-        this.stopMusic();
+        this.stopBackgroundVideo(); // Pausar el video cuando termine el juego
         this.playSound('lose');
         this.lastScore = this.score;
         this.state = 'fin';
@@ -550,7 +580,7 @@ class FlappyGame {
             // Botón Xogar - escalado dinámicamente
             if (this.isPointInButton(x, y, xogarButton.x, xogarButton.y, xogarButton.width, xogarButton.height)) {
                 this.state = 'menu';
-                this.playMusic();
+                this.stopBackgroundVideo(); // Pausar video al volver al menú
             }
             // Botón Escoitanos
             else if (this.isPointInButton(x, y, escoitanosButton.x, escoitanosButton.y, escoitanosButton.width, escoitanosButton.height)) {
@@ -574,6 +604,7 @@ class FlappyGame {
                     this.playSound('select');
                     this.resetGame();
                     this.state = 'jugando';
+                    this.startBackgroundVideo(); // Iniciar video solo cuando empiece a jugar
                     break;
                 }
             }
@@ -596,7 +627,7 @@ class FlappyGame {
             // Botón Xogar de nuevo - escalado dinámicamente
             if (this.isPointInButton(x, y, xogarButton.x, xogarButton.y, xogarButton.width, xogarButton.height)) {
                 this.state = 'menu';
-                this.playMusic();
+                this.stopBackgroundVideo(); // Pausar video al volver al menú
             }
             // Botón Escoitanos
             else if (this.isPointInButton(x, y, escoitanosButton.x, escoitanosButton.y, escoitanosButton.width, escoitanosButton.height)) {
@@ -679,15 +710,28 @@ class FlappyGame {
         }
     }
     
-    playMusic() {
-        if (this.sounds.cancion) {
-            this.sounds.cancion.play().catch(() => {});
+    startBackgroundVideo() {
+        if (this.backgroundVideo && this.videoLoaded) {
+            // Activar el sonido del video cuando el usuario interactúa
+            this.backgroundVideo.muted = false;
+            this.backgroundVideo.volume = 0.3; // Volumen moderado
+            
+            const playPromise = this.backgroundVideo.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                    // Si falla con sonido, intentar sin sonido
+                    this.backgroundVideo.muted = true;
+                    this.backgroundVideo.play().catch(() => {
+                        console.log('No se pudo reproducir el video de fondo');
+                    });
+                });
+            }
         }
     }
     
-    stopMusic() {
-        if (this.sounds.cancion) {
-            this.sounds.cancion.pause();
+    stopBackgroundVideo() {
+        if (this.backgroundVideo) {
+            this.backgroundVideo.pause();
         }
     }
     
@@ -796,20 +840,17 @@ class FlappyGame {
     }
     
     renderJuego() {
-        // Fondo
-        this.ctx.fillStyle = this.LIGHT_BLUE;
-        this.ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
-        
-        // Edificios de fondo
-        if (this.images.edificios) {
-            const img = this.images.edificios;
-            const scale = 0.5;
-            const scaledHeight = img.height * scale;
-            const y = this.HEIGHT - scaledHeight;
-            
-            this.ctx.drawImage(img, this.backgroundX, y, img.width * scale, scaledHeight);
-            this.ctx.drawImage(img, this.backgroundX + img.width * scale, y, img.width * scale, scaledHeight);
+        // Fondo - Video o color de respaldo
+        if (this.backgroundVideo && this.videoLoaded && this.backgroundVideo.readyState >= 2) {
+            // Dibujar el video escalado para llenar el canvas
+            this.ctx.drawImage(this.backgroundVideo, 0, 0, this.WIDTH, this.HEIGHT);
+        } else {
+            // Fondo de respaldo si el video no está listo
+            this.ctx.fillStyle = this.LIGHT_BLUE;
+            this.ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
         }
+        
+        // Los edificios se quitan ya que el video es el fondo completo
         
         // Pájaro
         const characters = ['fonso', 'mauro', 'diego', 'rocky'];
