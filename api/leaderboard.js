@@ -11,6 +11,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Debug: verificar variables de entorno
+  console.log('Environment check:', {
+    hasUrl: !!process.env.UPSTASH_REDIS_REST_URL,
+    hasToken: !!process.env.UPSTASH_REDIS_REST_TOKEN,
+    urlStart: process.env.UPSTASH_REDIS_REST_URL?.substring(0, 20)
+  });
+
   try {
     const { limit = 10, playerId } = req.query;
     const limitNum = Math.min(parseInt(limit), 50); // Máximo 50
@@ -63,6 +70,14 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }
