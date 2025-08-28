@@ -33,6 +33,17 @@ class FlappyGame {
         this.frameTime = 1000 / this.FPS;
         this.lastFrameTime = 0;
         
+        // Diagnóstico de rendimiento
+        this.performanceStats = {
+            frameCount: 0,
+            lastFpsUpdate: 0,
+            currentFps: 0,
+            frameTimeHistory: [],
+            maxFrameTime: 0,
+            minFrameTime: Infinity,
+            avgFrameTime: 0
+        };
+        
         // Colores
         this.LIGHT_BLUE = '#87CEEB';
         this.DARK_GRAY = '#323232';
@@ -350,8 +361,12 @@ class FlappyGame {
     startGame() {
         console.log('🚀 Iniciando juego...');
         console.log('📐 Canvas dimensions:', this.WIDTH, 'x', this.HEIGHT);
+        console.log('🔍 Device Pixel Ratio:', this.devicePixelRatio || 1);
+        console.log('📏 Canvas internal size:', this.canvas.width, 'x', this.canvas.height);
         console.log('🎯 Canvas element:', this.canvas);
         console.log('🖌️ Context:', this.ctx);
+        console.log('⚡ Target FPS:', this.FPS);
+        console.log('🔧 Performance monitoring: ENABLED');
         
         // Configurar música de fondo
         if (this.sounds.cancion) {
@@ -377,12 +392,54 @@ class FlappyGame {
         const currentTime = performance.now();
         
         if (currentTime - this.lastFrameTime >= this.frameTime) {
+            const frameStart = performance.now();
+            
             this.update();
             this.render();
+            
+            const frameEnd = performance.now();
+            this.updatePerformanceStats(currentTime, frameEnd - frameStart);
+            
             this.lastFrameTime = currentTime;
         }
         
         requestAnimationFrame(() => this.gameLoop());
+    }
+    
+    updatePerformanceStats(currentTime, frameTime) {
+        this.performanceStats.frameCount++;
+        
+        // Actualizar estadísticas de frame time
+        this.performanceStats.frameTimeHistory.push(frameTime);
+        if (this.performanceStats.frameTimeHistory.length > 60) {
+            this.performanceStats.frameTimeHistory.shift();
+        }
+        
+        this.performanceStats.maxFrameTime = Math.max(this.performanceStats.maxFrameTime, frameTime);
+        this.performanceStats.minFrameTime = Math.min(this.performanceStats.minFrameTime, frameTime);
+        
+        // Calcular FPS cada segundo
+        if (currentTime - this.performanceStats.lastFpsUpdate >= 1000) {
+            this.performanceStats.currentFps = this.performanceStats.frameCount;
+            this.performanceStats.frameCount = 0;
+            this.performanceStats.lastFpsUpdate = currentTime;
+            
+            // Calcular promedio de frame time
+            if (this.performanceStats.frameTimeHistory.length > 0) {
+                const sum = this.performanceStats.frameTimeHistory.reduce((a, b) => a + b, 0);
+                this.performanceStats.avgFrameTime = sum / this.performanceStats.frameTimeHistory.length;
+            }
+            
+            // Log de rendimiento cada 5 segundos
+            if (this.performanceStats.frameCount % 5 === 0) {
+                console.log(`📊 Performance Stats:`);
+                console.log(`   FPS: ${this.performanceStats.currentFps}`);
+                console.log(`   Avg Frame Time: ${this.performanceStats.avgFrameTime.toFixed(2)}ms`);
+                console.log(`   Max Frame Time: ${this.performanceStats.maxFrameTime.toFixed(2)}ms`);
+                console.log(`   Canvas Size: ${this.WIDTH}x${this.HEIGHT}`);
+                console.log(`   Device Pixel Ratio: ${this.devicePixelRatio || 1}`);
+            }
+        }
     }
     
     update() {
@@ -809,6 +866,13 @@ class FlappyGame {
         this.ctx.font = `${Math.max(12, 16 * this.scale)}px monospace`;
         this.ctx.textAlign = 'left';
         this.ctx.fillText(`Puntos: ${this.score}`, 10 * this.scale, 30 * this.scale);
+        
+        // Indicador de rendimiento (solo si hay problemas)
+        if (this.performanceStats.currentFps > 0 && this.performanceStats.currentFps < 50) {
+            this.ctx.fillStyle = this.performanceStats.currentFps < 30 ? '#FF0000' : '#FFA500';
+            this.ctx.font = `${Math.max(10, 12 * this.scale)}px monospace`;
+            this.ctx.fillText(`FPS: ${this.performanceStats.currentFps}`, 10 * this.scale, 50 * this.scale);
+        }
     }
     
     renderFin() {
