@@ -82,6 +82,8 @@ class FlappyGame {
         
         // Audio optimization
         this.lastSoundTime = {}; // Para debounce de sonidos
+        this.audioPool = {}; // Pool de múltiples instancias de audio
+        this.maxAudioInstances = 3; // Máximo 3 instancias por sonido
         
         this.init();
     }
@@ -286,41 +288,62 @@ class FlappyGame {
         
                 // Cargar sonidos con manejo especial para iOS
         soundFiles.forEach(filename => {
-            const audio = new Audio();
+            const soundName = filename.split('.')[0];
+            const isMusic = filename === 'cancion.mp3';
+            const poolSize = isMusic ? 1 : this.maxAudioInstances; // Solo 1 instancia para música
             
-            let audioLoaded = false;
+            this.audioPool[soundName] = [];
             
-            // Múltiples eventos para asegurar detección de carga
-            const markAudioLoaded = () => {
-                if (!audioLoaded) {
-                    audioLoaded = true;
-                    this.assetLoaded();
+            // Crear múltiples instancias para efectos de sonido
+            for (let i = 0; i < poolSize; i++) {
+                const audio = new Audio();
+                let audioLoaded = false;
+                
+                // Múltiples eventos para asegurar detección de carga
+                const markAudioLoaded = () => {
+                    if (!audioLoaded) {
+                        audioLoaded = true;
+                        // Solo contar el asset una vez (primera instancia)
+                        if (i === 0) {
+                            this.assetLoaded();
+                        }
+                    }
+                };
+                
+                audio.oncanplaythrough = markAudioLoaded;
+                audio.onloadeddata = markAudioLoaded;
+                audio.oncanplay = markAudioLoaded;
+                
+                audio.onerror = () => {
+                    if (!audioLoaded) {
+                        audioLoaded = true;
+                        if (i === 0) {
+                            this.assetLoaded(); // Continuar aunque falle
+                        }
+                    }
+                };
+                
+                // Timeout para iOS - si no carga en 1 segundo, continuar
+                setTimeout(() => {
+                    if (!audioLoaded) {
+                        audioLoaded = true;
+                        if (i === 0) {
+                            this.assetLoaded();
+                        }
+                    }
+                }, 1000);
+                
+                audio.src = `assets/sounds/${filename}`;
+                audio.volume = isMusic ? 0.2 : 0.1;
+                audio.preload = 'auto';
+                
+                this.audioPool[soundName].push(audio);
+                
+                // Mantener compatibilidad con código existente (primera instancia)
+                if (i === 0) {
+                    this.sounds[soundName] = audio;
                 }
-            };
-            
-            audio.oncanplaythrough = markAudioLoaded;
-            audio.onloadeddata = markAudioLoaded;
-            audio.oncanplay = markAudioLoaded;
-            
-            audio.onerror = () => {
-                if (!audioLoaded) {
-                    audioLoaded = true;
-                    this.assetLoaded(); // Continuar aunque falle
-                }
-            };
-            
-            // Timeout para iOS - si no carga en 1 segundo, continuar
-            setTimeout(() => {
-                if (!audioLoaded) {
-                    audioLoaded = true;
-                    this.assetLoaded();
-                }
-            }, 1000);
-            
-            audio.src = `assets/sounds/${filename}`;
-            audio.volume = filename === 'cancion.mp3' ? 0.2 : 0.1;
-            audio.preload = 'auto';
-            this.sounds[filename.split('.')[0]] = audio;
+            }
         });
     }
     
@@ -437,6 +460,7 @@ class FlappyGame {
             // Verificar recolección
             if (Math.abs(collectible.x - this.birdX) < 25 && Math.abs(collectible.y - this.birdY) < 25) {
                 collectible.active = false; // Marcar como inactivo en lugar de splice
+                console.log('🎵 Intentando reproducir pickup sound...');
                 this.playSound('pickup');
                 this.score += 5;
             } else if (collectible.x < -20) {
@@ -601,29 +625,74 @@ class FlappyGame {
     }
     
     playSound(soundName) {
-        if (!this.sounds[soundName]) return;
+        if (!this.audioPool[soundName] || this.audioPool[soundName].length === 0) {
+            console.log(`❌ No audio pool for ${soundName}`);
+            return;
+        }
         
-        // Debounce: evitar spam de sonidos
+        // Debounce más agresivo para iOS
         const currentTime = performance.now();
-        const minInterval = soundName === 'pickup' ? 100 : 50; // 100ms para pickup, 50ms para otros
+        const minInterval = soundName === 'pickup' ? 80 : 40; // Reducido para mejor respuesta
         
         if (this.lastSoundTime[soundName] && 
             currentTime - this.lastSoundTime[soundName] < minInterval) {
+            console.log(`⏱️ Audio debounced: ${soundName} (${currentTime - this.lastSoundTime[soundName]}ms ago)`);
             return; // Skip si es muy pronto
         }
         
         try {
-            const audio = this.sounds[soundName];
+            // Buscar una instancia disponible en el pool
+            let availableAudio = null;
             
-            // Solo resetear currentTime si el audio no está reproduciéndose
-            if (audio.paused || audio.ended) {
-                audio.currentTime = 0;
+            for (let audio of this.audioPool[soundName]) {
+                if (audio.paused || audio.ended || audio.currentTime === 0) {
+                    availableAudio = audio;
+                    break;
+                }
             }
             
-            audio.play().catch(() => {});
+            // Si no hay disponible, usar la primera (interrumpir)
+            if (!availableAudio) {
+                availableAudio = this.audioPool[soundName][0];
+                console.log(`🔄 No available audio, using first instance for ${soundName}`);
+            } else {
+                console.log(`✅ Found available audio instance for ${soundName}`);
+            }
+            
+            // Preparar y reproducir
+            availableAudio.currentTime = 0;
+            const playPromise = availableAudio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        console.log(`🔊 Successfully played ${soundName}`);
+                    })
+                    .catch((error) => {
+                        console.log(`⚠️ Play failed for ${soundName}:`, error.message);
+                        // Intento alternativo sin resetear currentTime
+                        try {
+                            availableAudio.play()
+                                .then(() => console.log(`🔊 Retry successful for ${soundName}`))
+                                .catch(() => console.log(`❌ Retry failed for ${soundName}`));
+                        } catch (e) {
+                            console.log(`❌ Exception in retry for ${soundName}`);
+                        }
+                    });
+            } else {
+                console.log(`⚠️ Play returned undefined for ${soundName}`);
+            }
+            
             this.lastSoundTime[soundName] = currentTime;
         } catch (e) {
-            // Silencioso
+            // Fallback: intentar con el método anterior
+            if (this.sounds[soundName]) {
+                try {
+                    this.sounds[soundName].play().catch(() => {});
+                } catch (fallbackError) {
+                    // Silencioso
+                }
+            }
         }
     }
     
