@@ -50,6 +50,8 @@ class FlappyGame {
         this.state = 'inicio';
         this.selectedCharacter = 0;
         this.lastScore = 0;
+        this.inputText = '';
+        this.showingRanking = false;
         
         // Assets
         this.images = {};
@@ -88,6 +90,20 @@ class FlappyGame {
         // Video de fondo
         this.backgroundVideo = document.getElementById('background-video');
         this.videoLoaded = false;
+        
+        // Sistema de usuario y ranking
+        this.player = {
+            id: null,
+            name: null,
+            bestScore: 0,
+            isRegistered: false
+        };
+        this.ranking = {
+            leaderboard: [],
+            playerRank: null,
+            totalPlayers: 0,
+            lastFetch: null
+        };
         
         this.init();
     }
@@ -169,6 +185,7 @@ class FlappyGame {
     init() {
         this.setupEventListeners();
         this.setupResizeHandler();
+        this.loadPlayerData();
         this.loadAssets();
     }
     
@@ -533,6 +550,12 @@ class FlappyGame {
         this.stopBackgroundVideo(); // Pausar el video cuando termine el juego
         this.playSound('lose');
         this.lastScore = this.score;
+        
+        // Enviar puntuación al servidor si el usuario está registrado
+        if (this.player.isRegistered) {
+            this.submitScore(this.score);
+        }
+        
         this.state = 'fin';
     }
     
@@ -735,6 +758,131 @@ class FlappyGame {
         }
     }
     
+    // ===== SISTEMA DE USUARIO Y RANKING =====
+    
+    loadPlayerData() {
+        try {
+            const savedPlayer = localStorage.getItem('flappy_player');
+            if (savedPlayer) {
+                const playerData = JSON.parse(savedPlayer);
+                this.player = {
+                    id: playerData.id,
+                    name: playerData.name,
+                    bestScore: playerData.bestScore || 0,
+                    isRegistered: true
+                };
+            } else {
+                // Generar ID único para nuevo jugador
+                this.player.id = this.generatePlayerId();
+            }
+        } catch (error) {
+            console.error('Error loading player data:', error);
+            this.player.id = this.generatePlayerId();
+        }
+    }
+    
+    generatePlayerId() {
+        return 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    async registerPlayer(playerName) {
+        try {
+            const response = await fetch('/api/register-player', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    playerId: this.player.id,
+                    playerName: playerName
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                this.player.name = playerName;
+                this.player.isRegistered = true;
+                
+                // Guardar en localStorage
+                localStorage.setItem('flappy_player', JSON.stringify({
+                    id: this.player.id,
+                    name: playerName,
+                    bestScore: 0,
+                    createdAt: new Date().toISOString()
+                }));
+                
+                return { success: true };
+            } else {
+                return { success: false, error: result.error };
+            }
+        } catch (error) {
+            console.error('Error registering player:', error);
+            return { success: false, error: 'Error de conexión' };
+        }
+    }
+    
+    async submitScore(score) {
+        if (!this.player.isRegistered) return;
+        
+        try {
+            const response = await fetch('/api/submit-score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    playerId: this.player.id,
+                    score: score,
+                    gameData: {
+                        character: this.selectedCharacter,
+                        timestamp: new Date().toISOString()
+                    }
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                // Actualizar mejor puntuación local
+                if (score > this.player.bestScore) {
+                    this.player.bestScore = score;
+                    const savedPlayer = JSON.parse(localStorage.getItem('flappy_player'));
+                    savedPlayer.bestScore = score;
+                    localStorage.setItem('flappy_player', JSON.stringify(savedPlayer));
+                }
+                
+                // Actualizar ranking info
+                this.ranking.playerRank = result.rank;
+                this.ranking.totalPlayers = result.totalPlayers;
+                
+                return result;
+            }
+        } catch (error) {
+            console.error('Error submitting score:', error);
+        }
+        return null;
+    }
+    
+    async fetchLeaderboard(limit = 10) {
+        try {
+            const url = `/api/leaderboard?limit=${limit}${this.player.isRegistered ? `&playerId=${this.player.id}` : ''}`;
+            const response = await fetch(url);
+            
+            if (response.ok) {
+                const result = await response.json();
+                this.ranking.leaderboard = result.leaderboard;
+                this.ranking.playerRank = result.playerRank;
+                this.ranking.totalPlayers = result.totalPlayers;
+                this.ranking.lastFetch = new Date();
+                return result;
+            }
+        } catch (error) {
+            console.error('Error fetching leaderboard:', error);
+        }
+        return null;
+    }
+    
     render() {
         if (!this.assetsLoaded) {
             this.renderLoading();
@@ -747,8 +895,14 @@ class FlappyGame {
             case 'inicio':
                 this.renderInicio();
                 break;
+            case 'registro':
+                this.renderRegistro();
+                break;
             case 'menu':
                 this.renderMenu();
+                break;
+            case 'ranking':
+                this.renderRanking();
                 break;
             case 'jugando':
                 this.renderJuego();

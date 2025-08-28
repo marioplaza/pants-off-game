@@ -1,0 +1,20 @@
+{
+  "name": "flappy-bird-banda-edition",
+  "version": "1.0.0",
+  "description": "Flappy Bird game with band theme and global ranking system",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "start": "serve ."
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.28.2"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  },
+  "keywords": ["game", "flappy-bird", "javascript", "canvas", "ranking"],
+  "author": "Mario Plaza",
+  "license": "MIT"
+}
