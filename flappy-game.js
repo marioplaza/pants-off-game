@@ -7,14 +7,14 @@ class FlappyGame {
         // ¡Modifica estos valores para ajustar la dificultad!
         this.DIFFICULTY_CONFIG = {
             // Velocidad inicial de tubos
-            INITIAL_PIPE_SPEED: 3,
+            INITIAL_PIPE_SPEED: 5,
             // Cada cuántos puntos aumenta la velocidad de tubos
             SPEED_INCREASE_EVERY: 10,
             // Cuánto aumenta la velocidad de tubos cada vez
             SPEED_INCREASE_AMOUNT: 0.2,
             
             // Gravedad inicial
-            INITIAL_GRAVITY: 0.3,
+            INITIAL_GRAVITY: 0.5,
             // Cada cuántos puntos aumenta la gravedad
             GRAVITY_INCREASE_EVERY: 25,
             // Cuánto aumenta la gravedad cada vez
