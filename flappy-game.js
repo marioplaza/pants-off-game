@@ -35,18 +35,7 @@ class FlappyGame {
         this.frameTime = 1000 / this.FPS;
         this.lastFrameTime = 0;
         
-        console.log(`🎯 FPS objetivo: ${this.FPS} (iOS: ${isIOS})`);
-        
-        // Diagnóstico de rendimiento
-        this.performanceStats = {
-            frameCount: 0,
-            lastFpsUpdate: 0,
-            currentFps: 0,
-            frameTimeHistory: [],
-            maxFrameTime: 0,
-            minFrameTime: Infinity,
-            avgFrameTime: 0
-        };
+
         
         // Colores
         this.LIGHT_BLUE = '#87CEEB';
@@ -61,7 +50,6 @@ class FlappyGame {
         this.state = 'inicio';
         this.selectedCharacter = 0;
         this.lastScore = 0;
-        this.lastLoggedState = null; // Para debug
         
         // Assets
         this.images = {};
@@ -148,7 +136,7 @@ class FlappyGame {
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         const dpr = isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 2);
         
-        console.log(`🔧 DPR original: ${window.devicePixelRatio}, DPR usado: ${dpr}`);
+
         
         // Establecer el tamaño real del canvas (buffer interno)
         this.canvas.width = this.WIDTH * dpr;
@@ -260,19 +248,9 @@ class FlappyGame {
         });
     }
     
-    supportsWebP() {
-        // Detectar soporte WEBP de forma síncrona
-        const canvas = document.createElement('canvas');
-        canvas.width = 1;
-        canvas.height = 1;
-        const dataURL = canvas.toDataURL('image/webp');
-        return dataURL.indexOf('data:image/webp') === 0;
-    }
+
     
     loadAssets() {
-        console.log('🎮 Iniciando carga de assets en v2.0...');
-        console.log('📱 User Agent:', navigator.userAgent);
-        console.log('🖼️ WEBP Support:', this.supportsWebP());
         
         const imageFiles = [
             'fonso.webp', 'mauro.webp', 'diego.webp', 'rocky.webp',
@@ -296,23 +274,15 @@ class FlappyGame {
         
         // Cargar imágenes
         imageFiles.forEach(filename => {
-            console.log(`🖼️ Cargando imagen: ${filename}`);
             const img = new Image();
-            img.onload = () => {
-                console.log(`✅ Imagen cargada: ${filename}`);
-                this.assetLoaded();
-            };
-            img.onerror = (e) => {
-                console.error(`❌ Error cargando imagen: ${filename}`, e);
-                this.assetLoaded();
-            };
+            img.onload = () => this.assetLoaded();
+            img.onerror = () => this.assetLoaded();
             img.src = `assets/images/${filename}`;
             this.images[filename.split('.')[0]] = img;
         });
         
-        // Cargar sonidos con manejo especial para iOS
+                // Cargar sonidos con manejo especial para iOS
         soundFiles.forEach(filename => {
-            console.log(`🔊 Cargando sonido: ${filename}`); 
             const audio = new Audio();
             
             let audioLoaded = false;
@@ -321,7 +291,6 @@ class FlappyGame {
             const markAudioLoaded = () => {
                 if (!audioLoaded) {
                     audioLoaded = true;
-                    console.log(`✅ Sonido cargado: ${filename}`);
                     this.assetLoaded();
                 }
             };
@@ -330,8 +299,7 @@ class FlappyGame {
             audio.onloadeddata = markAudioLoaded;
             audio.oncanplay = markAudioLoaded;
             
-            audio.onerror = (e) => {
-                console.error(`❌ Error cargando sonido: ${filename}`, e);
+            audio.onerror = () => {
                 if (!audioLoaded) {
                     audioLoaded = true;
                     this.assetLoaded(); // Continuar aunque falle
@@ -341,7 +309,6 @@ class FlappyGame {
             // Timeout para iOS - si no carga en 1 segundo, continuar
             setTimeout(() => {
                 if (!audioLoaded) {
-                    console.warn(`⏰ Timeout cargando sonido: ${filename} (continuando...)`);
                     audioLoaded = true;
                     this.assetLoaded();
                 }
@@ -356,29 +323,19 @@ class FlappyGame {
     
     assetLoaded() {
         this.assetsLoadedCount++;
-        console.log(`📊 Progreso: ${this.assetsLoadedCount}/${this.assetsToLoad} assets cargados`);
         
         if (this.assetsLoadedCount >= this.assetsToLoad) {
-            console.log('🎉 ¡Todos los assets cargados! Iniciando juego...');
             this.assetsLoaded = true;
             this.startGame();
         }
     }
     
     startGame() {
-        console.log('🚀 Iniciando juego...');
-        console.log('📐 Canvas dimensions:', this.WIDTH, 'x', this.HEIGHT);
-        console.log('🔍 Device Pixel Ratio:', this.devicePixelRatio || 1);
-        console.log('📏 Canvas internal size:', this.canvas.width, 'x', this.canvas.height);
-        console.log('🎯 Canvas element:', this.canvas);
-        console.log('🖌️ Context:', this.ctx);
-        console.log('⚡ Target FPS:', this.FPS);
-        console.log('🔧 Performance monitoring: ENABLED');
         
         // Configurar música de fondo
         if (this.sounds.cancion) {
             this.sounds.cancion.loop = true;
-            this.sounds.cancion.play().catch(e => console.log('No se pudo reproducir la música:', e));
+            this.sounds.cancion.play().catch(() => {});
         }
         
         // Para iOS, asegurar que el canvas esté correctamente inicializado
@@ -403,89 +360,15 @@ class FlappyGame {
         const shouldUpdate = timeSinceLastFrame >= this.frameTime - 1; // 1ms de tolerancia
         
         if (shouldUpdate) {
-            const frameStart = performance.now();
-            
-            // Medir update por separado
-            const updateStart = performance.now();
             this.update();
-            const updateTime = performance.now() - updateStart;
-            
-            // Medir render por separado
-            const renderStart = performance.now();
             this.render();
-            const renderTime = performance.now() - renderStart;
-            
-            const frameEnd = performance.now();
-            const totalFrameTime = frameEnd - frameStart;
-            
-            // Solo log frames muy lentos para no saturar
-            if (totalFrameTime > 30) {
-                console.warn(`🐌 Frame muy lento: ${totalFrameTime.toFixed(2)}ms (Update: ${updateTime.toFixed(2)}ms, Render: ${renderTime.toFixed(2)}ms)`);
-            }
-            
-            this.updatePerformanceStats(currentTime, totalFrameTime, updateTime, renderTime);
-            
             this.lastFrameTime = currentTime;
         }
         
         requestAnimationFrame(() => this.gameLoop());
     }
     
-    updatePerformanceStats(currentTime, frameTime, updateTime, renderTime) {
-        this.performanceStats.frameCount++;
-        
-        // Actualizar estadísticas de frame time
-        this.performanceStats.frameTimeHistory.push(frameTime);
-        if (this.performanceStats.frameTimeHistory.length > 60) {
-            this.performanceStats.frameTimeHistory.shift();
-        }
-        
-        this.performanceStats.maxFrameTime = Math.max(this.performanceStats.maxFrameTime, frameTime);
-        this.performanceStats.minFrameTime = Math.min(this.performanceStats.minFrameTime, frameTime);
-        
-        // Estadísticas adicionales
-        if (!this.performanceStats.updateTimes) this.performanceStats.updateTimes = [];
-        if (!this.performanceStats.renderTimes) this.performanceStats.renderTimes = [];
-        
-        this.performanceStats.updateTimes.push(updateTime);
-        this.performanceStats.renderTimes.push(renderTime);
-        
-        if (this.performanceStats.updateTimes.length > 60) this.performanceStats.updateTimes.shift();
-        if (this.performanceStats.renderTimes.length > 60) this.performanceStats.renderTimes.shift();
-        
-        // Calcular FPS cada segundo
-        if (currentTime - this.performanceStats.lastFpsUpdate >= 1000) {
-            this.performanceStats.currentFps = this.performanceStats.frameCount;
-            this.performanceStats.frameCount = 0;
-            this.performanceStats.lastFpsUpdate = currentTime;
-            
-            // Calcular promedios
-            if (this.performanceStats.frameTimeHistory.length > 0) {
-                const sum = this.performanceStats.frameTimeHistory.reduce((a, b) => a + b, 0);
-                this.performanceStats.avgFrameTime = sum / this.performanceStats.frameTimeHistory.length;
-            }
-            
-            const avgUpdateTime = this.performanceStats.updateTimes.length > 0 ? 
-                this.performanceStats.updateTimes.reduce((a, b) => a + b, 0) / this.performanceStats.updateTimes.length : 0;
-            const avgRenderTime = this.performanceStats.renderTimes.length > 0 ? 
-                this.performanceStats.renderTimes.reduce((a, b) => a + b, 0) / this.performanceStats.renderTimes.length : 0;
-            
-            // Log de rendimiento cada segundo
-            if (this.performanceStats.currentFps > 0) {
-                console.log(`📊 Performance Stats:`);
-                console.log(`   FPS: ${this.performanceStats.currentFps}`);
-                console.log(`   Avg Frame Time: ${this.performanceStats.avgFrameTime.toFixed(2)}ms`);
-                console.log(`   Max Frame Time: ${this.performanceStats.maxFrameTime.toFixed(2)}ms`);
-                console.log(`   Avg Update: ${avgUpdateTime.toFixed(2)}ms, Avg Render: ${avgRenderTime.toFixed(2)}ms`);
-                console.log(`   Canvas Size: ${this.WIDTH}x${this.HEIGHT}`);
-                console.log(`   Device Pixel Ratio: ${this.devicePixelRatio || 1}`);
-                console.log(`   Total Pixels: ${(this.canvas.width * this.canvas.height / 1000000).toFixed(1)}M`);
-                
-                // Reset max frame time para siguiente medición
-                this.performanceStats.maxFrameTime = 0;
-            }
-        }
-    }
+
     
     update() {
         if (this.state === 'jugando') {
@@ -612,8 +495,6 @@ class FlappyGame {
     }
     
     handleClick(x, y) {
-        console.log(`👆 Click detectado en (${Math.round(x)}, ${Math.round(y)}) - Estado: ${this.state}`);
-        
         if (this.state === 'inicio') {
             const xogarButton = {
                 x: this.WIDTH / 2,
@@ -629,21 +510,14 @@ class FlappyGame {
                 height: 60 * this.scale
             };
             
-            console.log(`🎮 Botón Xogar: centro(${Math.round(xogarButton.x)}, ${Math.round(xogarButton.y)}) tamaño(${Math.round(xogarButton.width)}x${Math.round(xogarButton.height)})`);
-            console.log(`🎵 Botón Escoitanos: centro(${Math.round(escoitanosButton.x)}, ${Math.round(escoitanosButton.y)}) tamaño(${Math.round(escoitanosButton.width)}x${Math.round(escoitanosButton.height)})`);
-            
             // Botón Xogar - escalado dinámicamente
             if (this.isPointInButton(x, y, xogarButton.x, xogarButton.y, xogarButton.width, xogarButton.height)) {
-                console.log('🎮 ¡Botón Xogar presionado!');
                 this.state = 'menu';
                 this.playMusic();
             }
             // Botón Escoitanos
             else if (this.isPointInButton(x, y, escoitanosButton.x, escoitanosButton.y, escoitanosButton.width, escoitanosButton.height)) {
-                console.log('🎵 ¡Botón Escoitanos presionado!');
                 this.openSpotify();
-            } else {
-                console.log('❌ Click fuera de los botones');
             }
         }
         else if (this.state === 'menu') {
@@ -684,16 +558,12 @@ class FlappyGame {
             
             // Botón Xogar de nuevo - escalado dinámicamente
             if (this.isPointInButton(x, y, xogarButton.x, xogarButton.y, xogarButton.width, xogarButton.height)) {
-                console.log('🔄 ¡Botón Xogar de nuevo presionado!');
                 this.state = 'menu';
                 this.playMusic();
             }
             // Botón Escoitanos
             else if (this.isPointInButton(x, y, escoitanosButton.x, escoitanosButton.y, escoitanosButton.width, escoitanosButton.height)) {
-                console.log('🎵 ¡Botón Escoitanos (fin) presionado!');
                 this.openSpotify();
-            } else {
-                console.log('❌ Click fuera de los botones (estado fin)');
             }
         }
     }
@@ -704,29 +574,14 @@ class FlappyGame {
     }
     
     openSpotify() {
-        console.log('🎵 v4.0 - Intentando abrir Spotify...');
-        
         const spotifyWebUrl = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82';
         
-        console.log('🌐 Método directo: Abriendo Spotify web');
-        console.log('🔗 URL:', spotifyWebUrl);
-        
         try {
-            // Método más simple: usar window.open directamente
             const newWindow = window.open(spotifyWebUrl, '_blank', 'noopener,noreferrer');
-            
-            if (newWindow) {
-                console.log('✅ Ventana abierta correctamente');
-                // En iOS, si funciona, la página web de Spotify mostrará el botón "Abrir en App"
-            } else {
-                console.warn('⚠️ window.open bloqueado, intentando método alternativo');
-                // Si window.open está bloqueado, redirigir en la misma ventana
+            if (!newWindow) {
                 window.location.href = spotifyWebUrl;
             }
-            
         } catch (error) {
-            console.error('❌ Error:', error);
-            console.log('🔄 Fallback: redirigiendo en misma ventana');
             window.location.href = spotifyWebUrl;
         }
     }
@@ -735,18 +590,16 @@ class FlappyGame {
         if (this.sounds[soundName]) {
             try {
                 this.sounds[soundName].currentTime = 0;
-                this.sounds[soundName].play().catch(e => console.log(`🔇 Error reproduciendo sonido ${soundName}:`, e));
+                this.sounds[soundName].play().catch(() => {});
             } catch (e) {
-                console.log(`🔇 Error preparando sonido ${soundName}:`, e);
+                // Silencioso
             }
-        } else {
-            console.log(`🔇 Sonido no disponible: ${soundName}`);
         }
     }
     
     playMusic() {
         if (this.sounds.cancion) {
-            this.sounds.cancion.play().catch(e => console.log('Error reproduciendo música:', e));
+            this.sounds.cancion.play().catch(() => {});
         }
     }
     
@@ -762,11 +615,7 @@ class FlappyGame {
             return;
         }
         
-        // Debug: log del estado actual (solo una vez por estado para no saturar)
-        if (this.lastLoggedState !== this.state) {
-            console.log(`🎭 Renderizando estado: ${this.state}`);
-            this.lastLoggedState = this.state;
-        }
+
         
         switch (this.state) {
             case 'inicio':
@@ -912,24 +761,7 @@ class FlappyGame {
         this.ctx.textAlign = 'left';
         this.ctx.fillText(`Puntos: ${this.score}`, 10 * this.scale, 30 * this.scale);
         
-        // Indicador de rendimiento mejorado
-        if (this.performanceStats.currentFps > 0) {
-            const targetFps = this.FPS;
-            const fpsRatio = this.performanceStats.currentFps / targetFps;
-            
-            let color = '#00FF00'; // Verde para FPS bueno
-            if (fpsRatio < 0.9) color = '#FFA500'; // Naranja si está por debajo del 90% del objetivo
-            if (fpsRatio < 0.7) color = '#FF0000'; // Rojo si está muy por debajo
-            
-            this.ctx.fillStyle = color;
-            this.ctx.font = `${Math.max(10, 12 * this.scale)}px monospace`;
-            this.ctx.fillText(`FPS: ${this.performanceStats.currentFps}/${targetFps}`, 10 * this.scale, 50 * this.scale);
-            
-            // Mostrar píxeles totales si hay problemas
-            if (fpsRatio < 0.9) {
-                this.ctx.fillText(`${(this.canvas.width * this.canvas.height / 1000000).toFixed(1)}M px`, 10 * this.scale, 70 * this.scale);
-            }
-        }
+
     }
     
     renderFin() {
