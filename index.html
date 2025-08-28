@@ -2,7 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Flappy Bird - Banda Edition</title>
     <style>
         body {
@@ -44,14 +47,19 @@
         }
         
         @media (max-width: 500px) {
-            .game-container {
-                padding: 10px;
-                margin: 10px;
+            body {
+                padding: 5px;
+                box-sizing: border-box;
+                min-height: 100vh;
+                min-height: -webkit-fill-available; /* iOS Safari fix */
             }
             
-            #flappy-game {
-                max-width: 100%;
-                height: auto;
+            .game-container {
+                padding: 10px;
+                margin: 0;
+                width: calc(100vw - 10px);
+                max-width: calc(100vw - 10px);
+                box-sizing: border-box;
             }
             
             .instructions {

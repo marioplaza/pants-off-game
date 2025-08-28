@@ -22,10 +22,12 @@ class FlappyGame {
         };
         
         // Configuración básica
-        this.WIDTH = 400;
-        this.HEIGHT = 600;
-        this.canvas.width = this.WIDTH;
-        this.canvas.height = this.HEIGHT;
+        this.BASE_WIDTH = 400;
+        this.BASE_HEIGHT = 600;
+        this.setupCanvasSize();
+        
+        // Escala para ajustar elementos del juego
+        this.scale = Math.min(this.WIDTH / this.BASE_WIDTH, this.HEIGHT / this.BASE_HEIGHT);
         
         this.FPS = 60;
         this.frameTime = 1000 / this.FPS;
@@ -44,6 +46,7 @@ class FlappyGame {
         this.state = 'inicio';
         this.selectedCharacter = 0;
         this.lastScore = 0;
+        this.lastLoggedState = null; // Para debug
         
         // Assets
         this.images = {};
@@ -77,9 +80,99 @@ class FlappyGame {
         this.init();
     }
     
+    setupCanvasSize() {
+        // Detectar si es iOS Safari
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        
+        // Obtener el tamaño disponible del contenedor
+        const container = this.canvas.parentElement;
+        
+        // Para iOS, usar un enfoque más conservador
+        let maxWidth, maxHeight;
+        
+        if (isIOS) {
+            // En iOS, usar dimensiones más seguras
+            maxWidth = Math.min(window.innerWidth - 30, 400);
+            maxHeight = Math.min(window.innerHeight - 150, 600);
+        } else {
+            // En otros dispositivos, usar el enfoque dinámico
+            const containerRect = container.getBoundingClientRect();
+            maxWidth = Math.min(containerRect.width - 40, window.innerWidth - 40);
+            maxHeight = Math.min(window.innerHeight - 200, 600);
+        }
+        
+        // Mantener la proporción 400:600 (2:3)
+        const aspectRatio = this.BASE_WIDTH / this.BASE_HEIGHT;
+        
+        let canvasWidth, canvasHeight;
+        
+        if (maxWidth / maxHeight > aspectRatio) {
+            // Limitado por altura
+            canvasHeight = maxHeight;
+            canvasWidth = canvasHeight * aspectRatio;
+        } else {
+            // Limitado por ancho
+            canvasWidth = maxWidth;
+            canvasHeight = canvasWidth / aspectRatio;
+        }
+        
+        // Asegurar tamaños mínimos
+        canvasWidth = Math.max(canvasWidth, 280);
+        canvasHeight = Math.max(canvasHeight, 420);
+        
+        // Para iOS, redondear a números enteros para evitar problemas de renderizado
+        if (isIOS) {
+            canvasWidth = Math.round(canvasWidth);
+            canvasHeight = Math.round(canvasHeight);
+        }
+        
+        this.WIDTH = canvasWidth;
+        this.HEIGHT = canvasHeight;
+        
+        // Configurar canvas con devicePixelRatio para pantallas de alta densidad
+        const dpr = window.devicePixelRatio || 1;
+        
+        // Establecer el tamaño real del canvas (buffer interno)
+        this.canvas.width = this.WIDTH * dpr;
+        this.canvas.height = this.HEIGHT * dpr;
+        
+        // Establecer el tamaño de visualización CSS
+        this.canvas.style.width = this.WIDTH + 'px';
+        this.canvas.style.height = this.HEIGHT + 'px';
+        
+        // Escalar el contexto para que coincida con el devicePixelRatio
+        this.ctx.scale(dpr, dpr);
+        
+        // Guardar el devicePixelRatio para uso posterior
+        this.devicePixelRatio = dpr;
+        
+        // Para iOS, asegurar que el contexto esté configurado correctamente
+        this.ctx.imageSmoothingEnabled = true;
+        this.ctx.imageSmoothingQuality = 'high';
+    }
+    
     init() {
         this.setupEventListeners();
+        this.setupResizeHandler();
         this.loadAssets();
+    }
+    
+    setupResizeHandler() {
+        window.addEventListener('resize', () => {
+            // Esperar un poco para que el redimensionamiento termine
+            setTimeout(() => {
+                this.setupCanvasSize();
+                this.scale = Math.min(this.WIDTH / this.BASE_WIDTH, this.HEIGHT / this.BASE_HEIGHT);
+            }, 100);
+        });
+        
+        // Para iOS, también escuchar cambios de orientación
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                this.setupCanvasSize();
+                this.scale = Math.min(this.WIDTH / this.BASE_WIDTH, this.HEIGHT / this.BASE_HEIGHT);
+            }, 500); // Más tiempo para orientación
+        });
     }
     
     setupEventListeners() {
@@ -101,8 +194,9 @@ class FlappyGame {
         // Mouse
         this.canvas.addEventListener('mousedown', (e) => {
             const rect = this.canvas.getBoundingClientRect();
-            this.mouse.x = e.clientX - rect.left;
-            this.mouse.y = e.clientY - rect.top;
+            // Convertir coordenadas del canvas a coordenadas del juego
+            this.mouse.x = (e.clientX - rect.left) * (this.WIDTH / rect.width);
+            this.mouse.y = (e.clientY - rect.top) * (this.HEIGHT / rect.height);
             this.mouse.clicked = true;
             this.handleClick(this.mouse.x, this.mouse.y);
         });
@@ -114,19 +208,54 @@ class FlappyGame {
         // Touch para móviles
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
+            
             const rect = this.canvas.getBoundingClientRect();
             const touch = e.touches[0];
-            this.mouse.x = touch.clientX - rect.left;
-            this.mouse.y = touch.clientY - rect.top;
+            
+            // Convertir coordenadas del canvas a coordenadas del juego
+            // Tener en cuenta el devicePixelRatio para cálculos precisos
+            this.mouse.x = (touch.clientX - rect.left) * (this.WIDTH / rect.width);
+            this.mouse.y = (touch.clientY - rect.top) * (this.HEIGHT / rect.height);
+            
             this.handleClick(this.mouse.x, this.mouse.y);
             
             if (this.state === 'jugando') {
                 this.velocity = this.jump;
             }
+        }, { passive: false });
+        
+        // Prevenir zoom en móviles con doble toque
+        this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
+        
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
+        
+        // Prevenir el menú contextual en iOS
+        this.canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
         });
     }
     
+    supportsWebP() {
+        // Detectar soporte WEBP de forma síncrona
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const dataURL = canvas.toDataURL('image/webp');
+        return dataURL.indexOf('data:image/webp') === 0;
+    }
+    
     loadAssets() {
+        console.log('🎮 Iniciando carga de assets...');
+        console.log('📱 User Agent:', navigator.userAgent);
+        console.log('🖼️ WEBP Support:', this.supportsWebP());
+        
         const imageFiles = [
             'fonso.webp', 'mauro.webp', 'diego.webp', 'rocky.webp',
             'bajo.webp', 'baquetas.webp', 'guitarra.webp', 'micro.webp',
@@ -149,18 +278,32 @@ class FlappyGame {
         
         // Cargar imágenes
         imageFiles.forEach(filename => {
+            console.log(`🖼️ Cargando imagen: ${filename}`);
             const img = new Image();
-            img.onload = () => this.assetLoaded();
-            img.onerror = () => this.assetLoaded();
+            img.onload = () => {
+                console.log(`✅ Imagen cargada: ${filename}`);
+                this.assetLoaded();
+            };
+            img.onerror = (e) => {
+                console.error(`❌ Error cargando imagen: ${filename}`, e);
+                this.assetLoaded();
+            };
             img.src = `assets/images/${filename}`;
             this.images[filename.split('.')[0]] = img;
         });
         
         // Cargar sonidos
         soundFiles.forEach(filename => {
+            console.log(`🔊 Cargando sonido: ${filename}`);
             const audio = new Audio();
-            audio.oncanplaythrough = () => this.assetLoaded();
-            audio.onerror = () => this.assetLoaded();
+            audio.oncanplaythrough = () => {
+                console.log(`✅ Sonido cargado: ${filename}`);
+                this.assetLoaded();
+            };
+            audio.onerror = (e) => {
+                console.error(`❌ Error cargando sonido: ${filename}`, e);
+                this.assetLoaded();
+            };
             audio.src = `assets/sounds/${filename}`;
             audio.volume = filename === 'cancion.mp3' ? 0.2 : 0.1;
             this.sounds[filename.split('.')[0]] = audio;
@@ -169,20 +312,39 @@ class FlappyGame {
     
     assetLoaded() {
         this.assetsLoadedCount++;
+        console.log(`📊 Progreso: ${this.assetsLoadedCount}/${this.assetsToLoad} assets cargados`);
+        
         if (this.assetsLoadedCount >= this.assetsToLoad) {
+            console.log('🎉 ¡Todos los assets cargados! Iniciando juego...');
             this.assetsLoaded = true;
             this.startGame();
         }
     }
     
     startGame() {
+        console.log('🚀 Iniciando juego...');
+        console.log('📐 Canvas dimensions:', this.WIDTH, 'x', this.HEIGHT);
+        console.log('🎯 Canvas element:', this.canvas);
+        console.log('🖌️ Context:', this.ctx);
+        
         // Configurar música de fondo
         if (this.sounds.cancion) {
             this.sounds.cancion.loop = true;
             this.sounds.cancion.play().catch(e => console.log('No se pudo reproducir la música:', e));
         }
         
+        // Para iOS, asegurar que el canvas esté correctamente inicializado
+        this.forceCanvasRedraw();
+        
+        console.log('🔄 Iniciando game loop...');
         this.gameLoop();
+    }
+    
+    forceCanvasRedraw() {
+        // Forzar un redibujado inicial del canvas para iOS Safari
+        this.ctx.clearRect(0, 0, this.WIDTH, this.HEIGHT);
+        this.ctx.fillStyle = this.LIGHT_BLUE;
+        this.ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
     }
     
     gameLoop() {
@@ -323,22 +485,29 @@ class FlappyGame {
     
     handleClick(x, y) {
         if (this.state === 'inicio') {
-            // Botón Xogar
-            if (this.isPointInButton(x, y, this.WIDTH / 2, 400, 200, 60)) {
+            // Botón Xogar - escalado dinámicamente
+            if (this.isPointInButton(x, y, this.WIDTH / 2, this.HEIGHT * 0.67, 200 * this.scale, 60 * this.scale)) {
                 this.state = 'menu';
                 this.playMusic();
             }
             // Botón Escoitanos
-            else if (this.isPointInButton(x, y, this.WIDTH / 2, 480, 200, 60)) {
+            else if (this.isPointInButton(x, y, this.WIDTH / 2, this.HEIGHT * 0.8, 200 * this.scale, 60 * this.scale)) {
                 this.openSpotify();
             }
         }
         else if (this.state === 'menu') {
-            // Selección de personajes
-            const positions = [[100, 240], [300, 240], [100, 400], [300, 400]];
+            // Selección de personajes - escalado dinámicamente
+            const basePositions = [[100, 240], [300, 240], [100, 400], [300, 400]];
+            const positions = basePositions.map(([x, y]) => [
+                x * (this.WIDTH / this.BASE_WIDTH), 
+                y * (this.HEIGHT / this.BASE_HEIGHT)
+            ]);
+            
             for (let i = 0; i < positions.length; i++) {
                 const [px, py] = positions[i];
-                if (x >= px - 40 && x <= px + 40 && y >= py - 40 && y <= py + 40) {
+                const hitboxSize = 40 * this.scale;
+                if (x >= px - hitboxSize && x <= px + hitboxSize && 
+                    y >= py - hitboxSize && y <= py + hitboxSize) {
                     this.selectedCharacter = i;
                     this.playSound('select');
                     this.resetGame();
@@ -348,13 +517,13 @@ class FlappyGame {
             }
         }
         else if (this.state === 'fin') {
-            // Botón Xogar de nuevo
-            if (this.isPointInButton(x, y, this.WIDTH / 2, 400, 200, 60)) {
+            // Botón Xogar de nuevo - escalado dinámicamente
+            if (this.isPointInButton(x, y, this.WIDTH / 2, this.HEIGHT * 0.67, 200 * this.scale, 60 * this.scale)) {
                 this.state = 'menu';
                 this.playMusic();
             }
             // Botón Escoitanos
-            else if (this.isPointInButton(x, y, this.WIDTH / 2, 480, 200, 60)) {
+            else if (this.isPointInButton(x, y, this.WIDTH / 2, this.HEIGHT * 0.8, 200 * this.scale, 60 * this.scale)) {
                 this.openSpotify();
             }
         }
@@ -394,6 +563,12 @@ class FlappyGame {
             return;
         }
         
+        // Debug: log del estado actual (solo una vez por estado para no saturar)
+        if (this.lastLoggedState !== this.state) {
+            console.log(`🎭 Renderizando estado: ${this.state}`);
+            this.lastLoggedState = this.state;
+        }
+        
         switch (this.state) {
             case 'inicio':
                 this.renderInicio();
@@ -415,12 +590,12 @@ class FlappyGame {
         this.ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
         
         this.ctx.fillStyle = this.BLACK;
-        this.ctx.font = '16px monospace';
+        this.ctx.font = `${Math.max(14, 16 * this.scale)}px monospace`;
         this.ctx.textAlign = 'center';
         this.ctx.fillText('Cargando...', this.WIDTH / 2, this.HEIGHT / 2);
         
         const progress = (this.assetsLoadedCount / this.assetsToLoad) * 100;
-        this.ctx.fillText(`${Math.round(progress)}%`, this.WIDTH / 2, this.HEIGHT / 2 + 30);
+        this.ctx.fillText(`${Math.round(progress)}%`, this.WIDTH / 2, this.HEIGHT / 2 + 30 * this.scale);
     }
     
     renderInicio() {
@@ -428,8 +603,8 @@ class FlappyGame {
             this.ctx.drawImage(this.images.fondo, 0, 0, this.WIDTH, this.HEIGHT);
         }
         
-        this.drawButton(this.images.xogar, this.WIDTH / 2, 400);
-        this.drawButton(this.images.escoitanos, this.WIDTH / 2, 480);
+        this.drawButton(this.images.xogar, this.WIDTH / 2, this.HEIGHT * 0.67);
+        this.drawButton(this.images.escoitanos, this.WIDTH / 2, this.HEIGHT * 0.8);
     }
     
     renderMenu() {
@@ -439,23 +614,31 @@ class FlappyGame {
         
         const names = ['FONSO', 'MAURO', 'DIEGO', 'ROCKY'];
         const taglines = ['HOPPUS', 'DE LOURO', 'DOBRE BREAK', 'O BERRIDOS'];
-        const positions = [[100, 240], [300, 240], [100, 400], [300, 400]];
+        const basePositions = [[100, 240], [300, 240], [100, 400], [300, 400]];
         const characters = ['fonso', 'mauro', 'diego', 'rocky'];
+        
+        // Escalar posiciones y tamaños
+        const positions = basePositions.map(([x, y]) => [
+            x * (this.WIDTH / this.BASE_WIDTH), 
+            y * (this.HEIGHT / this.BASE_HEIGHT)
+        ]);
         
         for (let i = 0; i < positions.length; i++) {
             const [x, y] = positions[i];
+            const charSize = 80 * this.scale;
             
             if (this.images[characters[i]]) {
-                this.ctx.drawImage(this.images[characters[i]], x - 40, y - 40, 80, 80);
+                this.ctx.drawImage(this.images[characters[i]], 
+                    x - charSize/2, y - charSize/2, charSize, charSize);
             }
             
             this.ctx.fillStyle = this.WHITE;
-            this.ctx.font = '16px monospace';
+            this.ctx.font = `${Math.max(12, 16 * this.scale)}px monospace`;
             this.ctx.textAlign = 'center';
-            this.ctx.fillText(names[i], x, y + 60);
+            this.ctx.fillText(names[i], x, y + 60 * this.scale);
             
             this.ctx.fillStyle = this.YELLOW;
-            this.ctx.fillText(taglines[i], x, y + 80);
+            this.ctx.fillText(taglines[i], x, y + 80 * this.scale);
         }
     }
     
@@ -503,9 +686,9 @@ class FlappyGame {
         
         // Puntuación
         this.ctx.fillStyle = this.BLACK;
-        this.ctx.font = '16px monospace';
+        this.ctx.font = `${Math.max(12, 16 * this.scale)}px monospace`;
         this.ctx.textAlign = 'left';
-        this.ctx.fillText(`Puntos: ${this.score}`, 10, 30);
+        this.ctx.fillText(`Puntos: ${this.score}`, 10 * this.scale, 30 * this.scale);
     }
     
     renderFin() {
@@ -513,21 +696,23 @@ class FlappyGame {
             this.ctx.drawImage(this.images.xogardenovo, 0, 0, this.WIDTH, this.HEIGHT);
         }
         
-        this.drawButton(this.images.xogar2, this.WIDTH / 2, 400);
-        this.drawButton(this.images.escoitanos2, this.WIDTH / 2, 480);
+        this.drawButton(this.images.xogar2, this.WIDTH / 2, this.HEIGHT * 0.67);
+        this.drawButton(this.images.escoitanos2, this.WIDTH / 2, this.HEIGHT * 0.8);
         
         // Mostrar puntuación final
         this.ctx.fillStyle = this.WHITE;
-        this.ctx.font = '20px monospace';
+        this.ctx.font = `${Math.max(16, 20 * this.scale)}px monospace`;
         this.ctx.textAlign = 'center';
-        this.ctx.fillText(`Puntuación: ${this.lastScore}`, this.WIDTH / 2, 350);
+        this.ctx.fillText(`Puntuación: ${this.lastScore}`, this.WIDTH / 2, this.HEIGHT * 0.58);
     }
     
     drawButton(image, x, y) {
         if (image) {
-            const scale = 200 / image.width;
-            const width = 200;
-            const height = image.height * scale;
+            const baseWidth = 200;
+            const scaledWidth = baseWidth * this.scale;
+            const buttonScale = scaledWidth / image.width;
+            const width = scaledWidth;
+            const height = image.height * buttonScale;
             this.ctx.drawImage(image, x - width/2, y - height/2, width, height);
         }
     }
