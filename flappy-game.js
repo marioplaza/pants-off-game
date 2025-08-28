@@ -29,9 +29,13 @@ class FlappyGame {
         // Escala para ajustar elementos del juego
         this.scale = Math.min(this.WIDTH / this.BASE_WIDTH, this.HEIGHT / this.BASE_HEIGHT);
         
-        this.FPS = 60;
+        // Detectar iOS y ajustar FPS objetivo
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        this.FPS = isIOS ? 45 : 60; // iOS Safari suele limitarse a ~45 FPS
         this.frameTime = 1000 / this.FPS;
         this.lastFrameTime = 0;
+        
+        console.log(`🎯 FPS objetivo: ${this.FPS} (iOS: ${isIOS})`);
         
         // Diagnóstico de rendimiento
         this.performanceStats = {
@@ -394,7 +398,11 @@ class FlappyGame {
     gameLoop() {
         const currentTime = performance.now();
         
-        if (currentTime - this.lastFrameTime >= this.frameTime) {
+        // Usar un approach más flexible para iOS
+        const timeSinceLastFrame = currentTime - this.lastFrameTime;
+        const shouldUpdate = timeSinceLastFrame >= this.frameTime - 1; // 1ms de tolerancia
+        
+        if (shouldUpdate) {
             const frameStart = performance.now();
             
             // Medir update por separado
@@ -410,9 +418,9 @@ class FlappyGame {
             const frameEnd = performance.now();
             const totalFrameTime = frameEnd - frameStart;
             
-            // Detectar frames problemáticos
-            if (totalFrameTime > 20) {
-                console.warn(`🐌 Frame lento detectado: ${totalFrameTime.toFixed(2)}ms (Update: ${updateTime.toFixed(2)}ms, Render: ${renderTime.toFixed(2)}ms)`);
+            // Solo log frames muy lentos para no saturar
+            if (totalFrameTime > 30) {
+                console.warn(`🐌 Frame muy lento: ${totalFrameTime.toFixed(2)}ms (Update: ${updateTime.toFixed(2)}ms, Render: ${renderTime.toFixed(2)}ms)`);
             }
             
             this.updatePerformanceStats(currentTime, totalFrameTime, updateTime, renderTime);
@@ -906,16 +914,19 @@ class FlappyGame {
         
         // Indicador de rendimiento mejorado
         if (this.performanceStats.currentFps > 0) {
+            const targetFps = this.FPS;
+            const fpsRatio = this.performanceStats.currentFps / targetFps;
+            
             let color = '#00FF00'; // Verde para FPS bueno
-            if (this.performanceStats.currentFps < 50) color = '#FFA500'; // Naranja
-            if (this.performanceStats.currentFps < 30) color = '#FF0000'; // Rojo
+            if (fpsRatio < 0.9) color = '#FFA500'; // Naranja si está por debajo del 90% del objetivo
+            if (fpsRatio < 0.7) color = '#FF0000'; // Rojo si está muy por debajo
             
             this.ctx.fillStyle = color;
             this.ctx.font = `${Math.max(10, 12 * this.scale)}px monospace`;
-            this.ctx.fillText(`FPS: ${this.performanceStats.currentFps}`, 10 * this.scale, 50 * this.scale);
+            this.ctx.fillText(`FPS: ${this.performanceStats.currentFps}/${targetFps}`, 10 * this.scale, 50 * this.scale);
             
             // Mostrar píxeles totales si hay problemas
-            if (this.performanceStats.currentFps < 50) {
+            if (fpsRatio < 0.9) {
                 this.ctx.fillText(`${(this.canvas.width * this.canvas.height / 1000000).toFixed(1)}M px`, 10 * this.scale, 70 * this.scale);
             }
         }
