@@ -80,6 +80,9 @@ class FlappyGame {
         this.keys = {};
         this.mouse = { x: 0, y: 0, clicked: false };
         
+        // Audio optimization
+        this.lastSoundTime = {}; // Para debounce de sonidos
+        
         this.init();
     }
     
@@ -419,23 +422,34 @@ class FlappyGame {
             const maxY = lastPipe.height + this.pipeGap - 30;
             this.collectibles.push({
                 x: this.WIDTH,
-                y: minY + Math.random() * (maxY - minY)
+                y: minY + Math.random() * (maxY - minY),
+                active: true
             });
         }
         
-        // Actualizar coleccionables
-        for (let i = this.collectibles.length - 1; i >= 0; i--) {
+        // Actualizar coleccionables - optimizado sin splice()
+        for (let i = 0; i < this.collectibles.length; i++) {
             const collectible = this.collectibles[i];
+            if (collectible.active === false) continue; // Skip objetos marcados como inactivos
+            
             collectible.x -= this.pipeSpeed;
             
             // Verificar recolección
             if (Math.abs(collectible.x - this.birdX) < 25 && Math.abs(collectible.y - this.birdY) < 25) {
-                this.collectibles.splice(i, 1);
+                collectible.active = false; // Marcar como inactivo en lugar de splice
                 this.playSound('pickup');
                 this.score += 5;
             } else if (collectible.x < -20) {
-                this.collectibles.splice(i, 1);
+                collectible.active = false; // Marcar como inactivo
             }
+        }
+        
+        // Limpiar objetos inactivos solo ocasionalmente (cada 60 frames ≈ 1 segundo)
+        if (!this.cleanupCounter) this.cleanupCounter = 0;
+        this.cleanupCounter++;
+        if (this.cleanupCounter >= 60) {
+            this.collectibles = this.collectibles.filter(c => c.active !== false);
+            this.cleanupCounter = 0;
         }
     }
     
@@ -587,13 +601,29 @@ class FlappyGame {
     }
     
     playSound(soundName) {
-        if (this.sounds[soundName]) {
-            try {
-                this.sounds[soundName].currentTime = 0;
-                this.sounds[soundName].play().catch(() => {});
-            } catch (e) {
-                // Silencioso
+        if (!this.sounds[soundName]) return;
+        
+        // Debounce: evitar spam de sonidos
+        const currentTime = performance.now();
+        const minInterval = soundName === 'pickup' ? 100 : 50; // 100ms para pickup, 50ms para otros
+        
+        if (this.lastSoundTime[soundName] && 
+            currentTime - this.lastSoundTime[soundName] < minInterval) {
+            return; // Skip si es muy pronto
+        }
+        
+        try {
+            const audio = this.sounds[soundName];
+            
+            // Solo resetear currentTime si el audio no está reproduciéndose
+            if (audio.paused || audio.ended) {
+                audio.currentTime = 0;
             }
+            
+            audio.play().catch(() => {});
+            this.lastSoundTime[soundName] = currentTime;
+        } catch (e) {
+            // Silencioso
         }
     }
     
@@ -749,7 +779,7 @@ class FlappyGame {
         // Objetos coleccionables
         const objects = ['bajo', 'baquetas', 'guitarra', 'micro'];
         for (let collectible of this.collectibles) {
-            if (this.images[objects[this.selectedCharacter]]) {
+            if (collectible.active !== false && this.images[objects[this.selectedCharacter]]) {
                 this.ctx.drawImage(this.images[objects[this.selectedCharacter]], 
                                  collectible.x - 16, collectible.y - 16, 32, 32);
             }
