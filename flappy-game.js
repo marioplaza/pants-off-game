@@ -698,9 +698,14 @@ class FlappyGame {
             };
             
             if (this.isPointInButton(x, y, saveButton.x, saveButton.y, saveButton.width, saveButton.height)) {
+                console.log('💾 Click en botón Guardar detectado');
+                console.log('📝 Texto actual:', this.inputText, 'Longitud:', this.inputText.length);
                 if (this.inputText.length >= 2 && this.inputText.length <= 15) {
+                    console.log('✅ Texto válido, procediendo con registro...');
                     this.playSound('select');
                     this.registerPlayerAsync(this.inputText);
+                } else {
+                    console.log('❌ Texto inválido - muy corto o muy largo');
                 }
             }
             
@@ -1023,19 +1028,23 @@ class FlappyGame {
     }
     
     async registerPlayerAsync(playerName) {
+        console.log('🚀 registerPlayerAsync llamado con nombre:', playerName);
         try {
+            console.log('📞 Llamando a registerPlayer...');
             const result = await this.registerPlayer(playerName);
+            console.log('📥 Resultado de registerPlayer:', result);
+            
             if (result.success) {
+                console.log('✅ Registro exitoso, cerrando modal y yendo al menú');
                 this.showingRegistrationModal = false;
                 this.state = 'menu';
                 this.fetchLeaderboard(); // Cargar ranking después del registro
                 this.stopBackgroundVideo(); // Pausar video al ir al menú
             } else {
-                // Mostrar error (por ahora solo console)
-                console.error('Error registering player:', result.error);
+                console.error('❌ Error registering player:', result.error);
             }
         } catch (error) {
-            console.error('Error in registerPlayerAsync:', error);
+            console.error('💥 Error in registerPlayerAsync:', error);
         }
     }
     
