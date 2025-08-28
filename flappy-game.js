@@ -140,8 +140,9 @@ class FlappyGame {
         this.WIDTH = canvasWidth;
         this.HEIGHT = canvasHeight;
         
-        // Optimización para rendimiento: limitar devicePixelRatio en pantallas muy densas
-        const dpr = Math.min(window.devicePixelRatio || 1, 2); // Máximo 2x para mejor rendimiento
+        // Optimización agresiva para rendimiento: usar DPR 1 en móviles para máximo rendimiento
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const dpr = isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 2);
         
         console.log(`🔧 DPR original: ${window.devicePixelRatio}, DPR usado: ${dpr}`);
         
@@ -432,8 +433,8 @@ class FlappyGame {
                 this.performanceStats.avgFrameTime = sum / this.performanceStats.frameTimeHistory.length;
             }
             
-            // Log de rendimiento cada 5 segundos (corregido)
-            if (Math.floor(currentTime / 5000) > Math.floor(this.performanceStats.lastFpsUpdate / 5000)) {
+            // Log de rendimiento cada 3 segundos
+            if (this.performanceStats.currentFps > 0) {
                 console.log(`📊 Performance Stats:`);
                 console.log(`   FPS: ${this.performanceStats.currentFps}`);
                 console.log(`   Avg Frame Time: ${this.performanceStats.avgFrameTime.toFixed(2)}ms`);
@@ -442,6 +443,9 @@ class FlappyGame {
                 console.log(`   Canvas Internal: ${this.canvas.width}x${this.canvas.height}`);
                 console.log(`   Device Pixel Ratio: ${this.devicePixelRatio || 1}`);
                 console.log(`   Total Pixels: ${(this.canvas.width * this.canvas.height / 1000000).toFixed(1)}M`);
+                
+                // Reset max frame time para siguiente medición
+                this.performanceStats.maxFrameTime = 0;
             }
         }
     }
@@ -871,11 +875,20 @@ class FlappyGame {
         this.ctx.textAlign = 'left';
         this.ctx.fillText(`Puntos: ${this.score}`, 10 * this.scale, 30 * this.scale);
         
-        // Indicador de rendimiento (solo si hay problemas)
-        if (this.performanceStats.currentFps > 0 && this.performanceStats.currentFps < 50) {
-            this.ctx.fillStyle = this.performanceStats.currentFps < 30 ? '#FF0000' : '#FFA500';
+        // Indicador de rendimiento mejorado
+        if (this.performanceStats.currentFps > 0) {
+            let color = '#00FF00'; // Verde para FPS bueno
+            if (this.performanceStats.currentFps < 50) color = '#FFA500'; // Naranja
+            if (this.performanceStats.currentFps < 30) color = '#FF0000'; // Rojo
+            
+            this.ctx.fillStyle = color;
             this.ctx.font = `${Math.max(10, 12 * this.scale)}px monospace`;
             this.ctx.fillText(`FPS: ${this.performanceStats.currentFps}`, 10 * this.scale, 50 * this.scale);
+            
+            // Mostrar píxeles totales si hay problemas
+            if (this.performanceStats.currentFps < 50) {
+                this.ctx.fillText(`${(this.canvas.width * this.canvas.height / 1000000).toFixed(1)}M px`, 10 * this.scale, 70 * this.scale);
+            }
         }
     }
     
