@@ -242,8 +242,6 @@ class FlappyGame {
                     }
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
-
-                    if (this.isMobile) this.hideMobileInput();
                     this.showingRegistrationModal = false;
                 } else if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
                     e.preventDefault();
@@ -675,7 +673,6 @@ class FlappyGame {
             
             // Click fuera del modal para cerrar
             if (x < modalX || x > modalX + modalWidth || y < modalY || y > modalY + modalHeight) {
-                if (this.isMobile) this.hideMobileInput();
                 this.showingRegistrationModal = false;
                 return;
             }
@@ -692,29 +689,21 @@ class FlappyGame {
                 console.log('📱 Es móvil?', this.isMobile);
                 
                 if (this.isMobile) {
-                    console.log('📱 MÓVIL: Activando input HTML...');
+                    console.log('📱 MÓVIL: Activando input HTML invisible para teclado...');
                     console.log('📝 Texto actual antes:', this.inputText);
-                    console.log('🎯 Input antes:', this.mobileInput.value);
                     
-                    // Hacer visible el input temporalmente para móvil
+                    // Input invisible pero focusable para activar teclado virtual
                     this.mobileInput.style.position = 'fixed';
-                    this.mobileInput.style.top = '50%';
-                    this.mobileInput.style.left = '50%';
-                    this.mobileInput.style.transform = 'translate(-50%, -50%)';
-                    this.mobileInput.style.zIndex = '10000';
-                    this.mobileInput.style.opacity = '1';
-                    this.mobileInput.style.pointerEvents = 'auto';
-                    this.mobileInput.style.fontSize = '16px';
-                    this.mobileInput.style.padding = '10px';
-                    this.mobileInput.style.border = '2px solid #333';
-                    this.mobileInput.style.borderRadius = '5px';
-                    this.mobileInput.style.backgroundColor = 'white';
+                    this.mobileInput.style.top = '-1000px'; // Fuera de pantalla
+                    this.mobileInput.style.left = '-1000px';
+                    this.mobileInput.style.opacity = '0';
+                    this.mobileInput.style.pointerEvents = 'none';
+                    this.mobileInput.style.zIndex = '-1';
                     
-                    this.mobileInput.value = this.inputText;
-                    this.mobileInput.focus();
-                    this.setupMobileInputListener();
+                    this.mobileInput.value = '';
+                    this.mobileInput.focus(); // Solo para activar teclado
                     
-                    console.log('✅ Input configurado - value:', this.mobileInput.value);
+                    console.log('✅ Teclado virtual activado - usando keydown del canvas');
                 }
                 // En PC no hacemos nada especial aquí - el teclado ya funciona
                 return;
@@ -763,7 +752,6 @@ class FlappyGame {
             };
             
             if (this.isPointInButton(x, y, closeButton.x, closeButton.y, closeButton.width, closeButton.height)) {
-                if (this.isMobile) this.hideMobileInput();
                 this.showingRegistrationModal = false;
             }
             
@@ -1082,7 +1070,7 @@ class FlappyGame {
             
             if (result.success) {
                 console.log('✅ Registro exitoso, cerrando modal y yendo al menú');
-                if (this.isMobile) this.hideMobileInput(); // Ocultar input móvil si estaba visible
+
                 this.showingRegistrationModal = false;
                 this.state = 'menu';
                 this.fetchLeaderboard(); // Cargar ranking después del registro
@@ -1259,11 +1247,11 @@ class FlappyGame {
         // Título del modal
         this.ctx.fillStyle = this.DARK_GRAY;
         this.ctx.font = `bold ${Math.floor(24 * this.scale)}px Arial`;
-        this.ctx.fillText('🎸 BANDA FLAPPY', this.WIDTH / 2, modalY + 60 * this.scale);
+        this.ctx.fillText('🎸 PANTS OFF BAND', this.WIDTH / 2, modalY + 60 * this.scale);
         
         // Subtítulo
         this.ctx.font = `${Math.floor(18 * this.scale)}px Arial`;
-        this.ctx.fillText('👤 ¡Bienvenido/a nuevo jugador!', this.WIDTH / 2, modalY + 100 * this.scale);
+        this.ctx.fillText('👤 ¡Bienvenido/a!', this.WIDTH / 2, modalY + 100 * this.scale);
         
         // Instrucción
         this.ctx.font = `${Math.floor(16 * this.scale)}px Arial`;
