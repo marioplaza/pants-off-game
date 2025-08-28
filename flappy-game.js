@@ -52,6 +52,7 @@ class FlappyGame {
         this.lastScore = 0;
         this.inputText = '';
         this.showingRanking = false;
+        this.showingRegistrationModal = false;
         
         // Assets
         this.images = {};
@@ -90,6 +91,10 @@ class FlappyGame {
         // Video de fondo
         this.backgroundVideo = document.getElementById('background-video');
         this.videoLoaded = false;
+        
+        // Input móvil para teclado virtual
+        this.mobileInput = document.getElementById('mobile-input');
+        this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         // Sistema de usuario y ranking
         this.player = {
@@ -212,7 +217,7 @@ class FlappyGame {
         document.addEventListener('keydown', (e) => {
             this.keys[e.code] = true;
             
-            if (this.state === 'registro') {
+            if (this.showingRegistrationModal) {
                 // Manejar input de texto para registro
                 if (e.key === 'Backspace') {
                     e.preventDefault();
@@ -222,6 +227,9 @@ class FlappyGame {
                     if (this.inputText.length >= 2 && this.inputText.length <= 15) {
                         this.registerPlayerAsync(this.inputText);
                     }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    this.showingRegistrationModal = false;
                 } else if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
                     e.preventDefault();
                     if (this.inputText.length < 15) {
@@ -623,22 +631,52 @@ class FlappyGame {
                 if (this.player.isRegistered) {
                     this.state = 'menu';
                     this.fetchLeaderboard(); // Cargar ranking actual
+                    this.stopBackgroundVideo(); // Pausar video al volver al menú
                 } else {
-                    this.state = 'registro';
+                    this.showingRegistrationModal = true;
                     this.inputText = '';
                 }
-                this.stopBackgroundVideo(); // Pausar video al volver al menú
             }
             // Botón Escoitanos
             else if (this.isPointInButton(x, y, escoitanosButton.x, escoitanosButton.y, escoitanosButton.width, escoitanosButton.height)) {
                 this.openSpotify();
             }
         }
-        else if (this.state === 'registro') {
+        // Manejar modal de registro
+        if (this.showingRegistrationModal) {
+            // Dimensiones del modal
+            const modalWidth = 350 * this.scale;
+            const modalHeight = 400 * this.scale;
+            const modalX = this.WIDTH / 2 - modalWidth / 2;
+            const modalY = this.HEIGHT / 2 - modalHeight / 2;
+            
+            // Click fuera del modal para cerrar
+            if (x < modalX || x > modalX + modalWidth || y < modalY || y > modalY + modalHeight) {
+                this.showingRegistrationModal = false;
+                return;
+            }
+            
+            // Campo de input - activar teclado móvil
+            const inputWidth = 280 * this.scale;
+            const inputHeight = 50 * this.scale;
+            const inputX = this.WIDTH / 2 - inputWidth / 2;
+            const inputY = this.HEIGHT / 2 - 30 * this.scale;
+            
+            if (x >= inputX && x <= inputX + inputWidth && 
+                y >= inputY && y <= inputY + inputHeight) {
+                if (this.isMobile) {
+                    // Activar input móvil
+                    this.mobileInput.value = this.inputText;
+                    this.mobileInput.focus();
+                    this.setupMobileInputListener();
+                }
+                return;
+            }
+            
             // Botón Guardar
             const saveButton = {
                 x: this.WIDTH / 2,
-                y: this.HEIGHT * 0.75,
+                y: this.HEIGHT / 2 + 120 * this.scale,
                 width: 180 * this.scale,
                 height: 50 * this.scale
             };
@@ -649,6 +687,20 @@ class FlappyGame {
                     this.registerPlayerAsync(this.inputText);
                 }
             }
+            
+            // Botón Cerrar (X)
+            const closeButton = {
+                x: modalX + modalWidth - 25 * this.scale,
+                y: modalY + 25 * this.scale,
+                width: 30 * this.scale,
+                height: 30 * this.scale
+            };
+            
+            if (this.isPointInButton(x, y, closeButton.x, closeButton.y, closeButton.width, closeButton.height)) {
+                this.showingRegistrationModal = false;
+            }
+            
+            return; // No procesar otros clicks cuando el modal está abierto
         }
         else if (this.state === 'menu') {
             // Botones adicionales en la parte inferior
@@ -951,8 +1003,10 @@ class FlappyGame {
         try {
             const result = await this.registerPlayer(playerName);
             if (result.success) {
+                this.showingRegistrationModal = false;
                 this.state = 'menu';
                 this.fetchLeaderboard(); // Cargar ranking después del registro
+                this.stopBackgroundVideo(); // Pausar video al ir al menú
             } else {
                 // Mostrar error (por ahora solo console)
                 console.error('Error registering player:', result.error);
@@ -960,6 +1014,35 @@ class FlappyGame {
         } catch (error) {
             console.error('Error in registerPlayerAsync:', error);
         }
+    }
+    
+    setupMobileInputListener() {
+        // Remover listener anterior si existe
+        if (this.mobileInputListener) {
+            this.mobileInput.removeEventListener('input', this.mobileInputListener);
+        }
+        
+        // Crear nuevo listener
+        this.mobileInputListener = (e) => {
+            this.inputText = e.target.value.replace(/[^a-zA-Z0-9]/g, '').substring(0, 15);
+            e.target.value = this.inputText; // Sincronizar
+        };
+        
+        this.mobileInput.addEventListener('input', this.mobileInputListener);
+        
+        // Auto-submit al presionar Enter
+        const enterListener = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (this.inputText.length >= 2 && this.inputText.length <= 15) {
+                    this.mobileInput.blur(); // Cerrar teclado
+                    this.registerPlayerAsync(this.inputText);
+                }
+                this.mobileInput.removeEventListener('keydown', enterListener);
+            }
+        };
+        
+        this.mobileInput.addEventListener('keydown', enterListener);
     }
     
     render() {
@@ -974,9 +1057,6 @@ class FlappyGame {
             case 'inicio':
                 this.renderInicio();
                 break;
-            case 'registro':
-                this.renderRegistro();
-                break;
             case 'menu':
                 this.renderMenu();
                 break;
@@ -989,6 +1069,11 @@ class FlappyGame {
             case 'fin':
                 this.renderFin();
                 break;
+        }
+        
+        // Renderizar modal de registro si está activo
+        if (this.showingRegistrationModal) {
+            this.renderRegistrationModal();
         }
     }
     
@@ -1037,55 +1122,76 @@ class FlappyGame {
         this.drawButton(this.images.escoitanos, this.WIDTH / 2, this.HEIGHT * 0.8);
     }
     
-    renderRegistro() {
-        // Fondo
-        if (this.images.fondo) {
-            this.ctx.drawImage(this.images.fondo, 0, 0, this.WIDTH, this.HEIGHT);
-        }
+    renderRegistrationModal() {
+        // Overlay semi-transparente
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
         
-        // Título
+        // Dimensiones del modal
+        const modalWidth = 350 * this.scale;
+        const modalHeight = 400 * this.scale;
+        const modalX = this.WIDTH / 2 - modalWidth / 2;
+        const modalY = this.HEIGHT / 2 - modalHeight / 2;
+        
+        // Fondo del modal
         this.ctx.fillStyle = this.WHITE;
-        this.ctx.font = `bold ${Math.floor(32 * this.scale)}px Arial`;
+        this.ctx.fillRect(modalX, modalY, modalWidth, modalHeight);
+        
+        // Borde del modal
+        this.ctx.strokeStyle = this.DARK_GRAY;
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(modalX, modalY, modalWidth, modalHeight);
+        
+        // Botón cerrar (X)
+        const closeX = modalX + modalWidth - 30 * this.scale;
+        const closeY = modalY + 15 * this.scale;
+        this.ctx.fillStyle = this.DARK_GRAY;
+        this.ctx.font = `bold ${Math.floor(20 * this.scale)}px Arial`;
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('🎸 BANDA FLAPPY', this.WIDTH / 2, this.HEIGHT * 0.2);
+        this.ctx.fillText('✕', closeX, closeY + 15 * this.scale);
+        
+        // Título del modal
+        this.ctx.fillStyle = this.DARK_GRAY;
+        this.ctx.font = `bold ${Math.floor(24 * this.scale)}px Arial`;
+        this.ctx.fillText('🎸 BANDA FLAPPY', this.WIDTH / 2, modalY + 60 * this.scale);
         
         // Subtítulo
-        this.ctx.font = `${Math.floor(24 * this.scale)}px Arial`;
-        this.ctx.fillText('👤 ¡Bienvenido/a nuevo jugador!', this.WIDTH / 2, this.HEIGHT * 0.35);
+        this.ctx.font = `${Math.floor(18 * this.scale)}px Arial`;
+        this.ctx.fillText('👤 ¡Bienvenido/a nuevo jugador!', this.WIDTH / 2, modalY + 100 * this.scale);
         
         // Instrucción
-        this.ctx.font = `${Math.floor(18 * this.scale)}px Arial`;
-        this.ctx.fillText('📝 Introduce tu nombre:', this.WIDTH / 2, this.HEIGHT * 0.48);
+        this.ctx.font = `${Math.floor(16 * this.scale)}px Arial`;
+        this.ctx.fillText('📝 Introduce tu nombre:', this.WIDTH / 2, modalY + 140 * this.scale);
         
         // Campo de texto
-        const inputWidth = 300 * this.scale;
+        const inputWidth = 280 * this.scale;
         const inputHeight = 50 * this.scale;
         const inputX = this.WIDTH / 2 - inputWidth / 2;
-        const inputY = this.HEIGHT * 0.55 - inputHeight / 2;
+        const inputY = this.HEIGHT / 2 - 30 * this.scale;
         
         // Fondo del input
-        this.ctx.fillStyle = this.WHITE;
+        this.ctx.fillStyle = '#f8f9fa';
         this.ctx.fillRect(inputX, inputY, inputWidth, inputHeight);
         
         // Borde del input
-        this.ctx.strokeStyle = this.DARK_GRAY;
+        this.ctx.strokeStyle = this.inputText.length >= 2 ? this.GREEN : this.DARK_GRAY;
         this.ctx.lineWidth = 2;
         this.ctx.strokeRect(inputX, inputY, inputWidth, inputHeight);
         
         // Texto del input
         this.ctx.fillStyle = this.BLACK;
-        this.ctx.font = `${Math.floor(20 * this.scale)}px Arial`;
+        this.ctx.font = `${Math.floor(18 * this.scale)}px Arial`;
         this.ctx.textAlign = 'left';
-        this.ctx.fillText(this.inputText, inputX + 10 * this.scale, inputY + inputHeight / 2 + 7 * this.scale);
+        this.ctx.fillText(this.inputText, inputX + 15 * this.scale, inputY + inputHeight / 2 + 6 * this.scale);
         
         // Cursor parpadeante
         if (Math.floor(Date.now() / 500) % 2) {
             const textWidth = this.ctx.measureText(this.inputText).width;
-            this.ctx.fillRect(inputX + 10 * this.scale + textWidth + 2, inputY + 10 * this.scale, 2, inputHeight - 20 * this.scale);
+            this.ctx.fillRect(inputX + 15 * this.scale + textWidth + 2, inputY + 12 * this.scale, 2, inputHeight - 24 * this.scale);
         }
         
         // Botón Guardar
-        const buttonY = this.HEIGHT * 0.75;
+        const buttonY = this.HEIGHT / 2 + 120 * this.scale;
         const buttonEnabled = this.inputText.length >= 2 && this.inputText.length <= 15;
         
         // Fondo del botón
@@ -1096,15 +1202,21 @@ class FlappyGame {
         
         // Texto del botón
         this.ctx.fillStyle = this.WHITE;
-        this.ctx.font = `bold ${Math.floor(18 * this.scale)}px Arial`;
+        this.ctx.font = `bold ${Math.floor(16 * this.scale)}px Arial`;
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('💾 GUARDAR Y JUGAR', this.WIDTH / 2, buttonY + 6 * this.scale);
+        this.ctx.fillText('💾 GUARDAR Y JUGAR', this.WIDTH / 2, buttonY + 5 * this.scale);
         
         // Información
-        this.ctx.fillStyle = this.WHITE;
-        this.ctx.font = `${Math.floor(14 * this.scale)}px Arial`;
-        this.ctx.fillText('ℹ️ Solo una vez, se guarda automáticamente', this.WIDTH / 2, this.HEIGHT * 0.9);
-        this.ctx.fillText(`(${this.inputText.length}/15 caracteres)`, this.WIDTH / 2, this.HEIGHT * 0.95);
+        this.ctx.fillStyle = this.DARK_GRAY;
+        this.ctx.font = `${Math.floor(12 * this.scale)}px Arial`;
+        this.ctx.fillText(`(${this.inputText.length}/15 caracteres)`, this.WIDTH / 2, modalY + modalHeight - 40 * this.scale);
+        
+        // Instrucción específica para móvil
+        if (this.isMobile) {
+            this.ctx.fillStyle = '#666';
+            this.ctx.font = `${Math.floor(11 * this.scale)}px Arial`;
+            this.ctx.fillText('📱 Toca el campo de texto para escribir', this.WIDTH / 2, modalY + modalHeight - 20 * this.scale);
+        }
     }
     
     renderMenu() {
