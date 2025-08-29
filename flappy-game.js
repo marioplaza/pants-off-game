@@ -52,6 +52,7 @@ class FlappyGame {
         this.lastScore = 0;
         this.showingRanking = false;
         this.showingNameInput = false;
+        this.lastModalCloseTime = 0;
         
         // Assets
         this.images = {};
@@ -593,7 +594,8 @@ class FlappyGame {
             await this.submitScore(this.score);
             // Cargar ranking actualizado
             await this.fetchLeaderboard(10);
-            this.showingGameOverModal = true;
+            // No mostrar el modal automáticamente
+            // this.showingGameOverModal = true;
         }
         
         this.state = 'fin';
@@ -625,8 +627,13 @@ class FlappyGame {
     }
     
     handleClick(x, y) {
+        // Protección contra clicks inmediatos después de cerrar modal
+        if (Date.now() - this.lastModalCloseTime < 300) {
+            console.log('🛡️ Click ignorado - muy pronto después de cerrar modal');
+            return;
+        }
+        
         console.log('🖱️ HANDLECLICK INICIADO');
-        console.log('📝 inputText AL INICIO de handleClick:', `"${this.inputText}"`);
         console.log('📍 Click en coordenadas:', x, y);
         console.log('🎭 Estado actual:', this.state);
         
@@ -676,6 +683,7 @@ class FlappyGame {
             // Click fuera del modal para cerrar
             if (x < modalX || x > modalX + modalWidth || y < modalY || y > modalY + modalHeight) {
                 this.showingGameOverModal = false;
+                this.lastModalCloseTime = Date.now();
                 return;
             }
             
@@ -689,6 +697,7 @@ class FlappyGame {
             
             if (this.isPointInButton(x, y, closeButton.x, closeButton.y, closeButton.width, closeButton.height)) {
                 this.showingGameOverModal = false;
+                this.lastModalCloseTime = Date.now();
                 return;
             }
             
@@ -720,22 +729,33 @@ class FlappyGame {
         else if (this.state === 'fin') {
             const xogarButton = {
                 x: this.WIDTH / 2,
-                y: this.HEIGHT * 0.67,
+                y: this.HEIGHT * 0.6,
+                width: 200 * this.scale,
+                height: 60 * this.scale
+            };
+            
+            const rankingButton = {
+                x: this.WIDTH / 2,
+                y: this.HEIGHT * 0.73,
                 width: 200 * this.scale,
                 height: 60 * this.scale
             };
             
             const escoitanosButton = {
                 x: this.WIDTH / 2,
-                y: this.HEIGHT * 0.8,
+                y: this.HEIGHT * 0.86,
                 width: 200 * this.scale,
                 height: 60 * this.scale
             };
             
-            // Botón Xogar de nuevo - escalado dinámicamente
+            // Botón Xogar de nuevo
             if (this.isPointInButton(x, y, xogarButton.x, xogarButton.y, xogarButton.width, xogarButton.height)) {
                 this.state = 'menu';
-                this.stopBackgroundVideo(); // Pausar video al volver al menú
+                this.stopBackgroundVideo();
+            }
+            // Botón Ver Ranking (solo si está registrado)
+            else if (this.player.isRegistered && this.isPointInButton(x, y, rankingButton.x, rankingButton.y, rankingButton.width, rankingButton.height)) {
+                this.showingGameOverModal = true;
             }
             // Botón Escoitanos
             else if (this.isPointInButton(x, y, escoitanosButton.x, escoitanosButton.y, escoitanosButton.width, escoitanosButton.height)) {
@@ -1254,14 +1274,26 @@ class FlappyGame {
             this.ctx.drawImage(this.images.xogardenovo, 0, 0, this.WIDTH, this.HEIGHT);
         }
         
-        this.drawButton(this.images.xogar2, this.WIDTH / 2, this.HEIGHT * 0.67);
-        this.drawButton(this.images.escoitanos2, this.WIDTH / 2, this.HEIGHT * 0.8);
+        this.drawButton(this.images.xogar2, this.WIDTH / 2, this.HEIGHT * 0.6);
+        
+        // Botón de ranking solo si el jugador está registrado
+        if (this.player.isRegistered) {
+            // Botón simple de ranking (crear uno temporal)
+            this.ctx.fillStyle = '#4CAF50';
+            this.ctx.fillRect(this.WIDTH / 2 - 100 * this.scale, this.HEIGHT * 0.73 - 30 * this.scale, 200 * this.scale, 60 * this.scale);
+            this.ctx.fillStyle = this.WHITE;
+            this.ctx.font = `${Math.max(14, 18 * this.scale)}px monospace`;
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('🏆 VER RANKING', this.WIDTH / 2, this.HEIGHT * 0.73 + 6 * this.scale);
+        }
+        
+        this.drawButton(this.images.escoitanos2, this.WIDTH / 2, this.HEIGHT * 0.86);
         
         // Mostrar puntuación final
         this.ctx.fillStyle = this.WHITE;
         this.ctx.font = `${Math.max(16, 20 * this.scale)}px monospace`;
         this.ctx.textAlign = 'center';
-        this.ctx.fillText(`Puntuación: ${this.lastScore}`, this.WIDTH / 2, this.HEIGHT * 0.58);
+        this.ctx.fillText(`Puntuación: ${this.lastScore}`, this.WIDTH / 2, this.HEIGHT * 0.52);
     }
     
     drawButton(image, x, y) {
