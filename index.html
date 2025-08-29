@@ -20,6 +20,38 @@
             overflow: hidden;
         }
         
+        /* Hover effects for buttons */
+        #confirm-name-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76,175,80,0.6) !important;
+        }
+        
+        #cancel-name-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(244,67,54,0.6) !important;
+        }
+        
+        #confirm-name-btn:active, #cancel-name-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Input focus effect */
+        #player-name-input:focus {
+            border-color: rgba(255,255,255,0.8);
+            box-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+        
+        /* Pulse animation for validation message */
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+        
+        #name-validation {
+            animation: pulse 2s infinite;
+        }
+        
         .game-container {
             position: relative;
             background-color: #34495e;
@@ -85,14 +117,14 @@
     </div>
     
     <!-- Input para registro de nombre -->
-    <div id="name-input-container" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center; font-family: monospace;">
-        <h3 style="margin: 0 0 15px 0; color: #333;">Introduce tu nombre</h3>
-        <input type="text" id="player-name-input" placeholder="Tu nombre..." maxlength="15" style="padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px; width: 200px; text-align: center; font-family: monospace;">
-        <div style="margin: 15px 0 0 0;">
-            <button id="confirm-name-btn" style="padding: 10px 20px; margin: 0 5px; font-size: 16px; border: none; border-radius: 5px; background: #4CAF50; color: white; cursor: pointer; font-family: monospace;">Confirmar</button>
-            <button id="cancel-name-btn" style="padding: 10px 20px; margin: 0 5px; font-size: 16px; border: none; border-radius: 5px; background: #f44336; color: white; cursor: pointer; font-family: monospace;">Cancelar</button>
+    <div id="name-input-container" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: transparent; padding: 30px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1); text-align: center; font-family: 'PixelDigivolve', 'Courier New', monospace; backdrop-filter: blur(10px);">
+        <h3 style="margin: 0 0 20px 0; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); font-size: 20px; font-weight: bold;">🎮 Introduce o teu nome</h3>
+        <input type="text" id="player-name-input" placeholder="O teu nome..." maxlength="15" style="padding: 15px; font-size: 18px; border: 3px solid rgba(255,255,255,0.3); border-radius: 15px; width: 220px; text-align: center; font-family: 'PixelDigivolve', 'Courier New', monospace; background: rgba(255,255,255,0.9); color: #333; transition: all 0.3s ease; outline: none;">
+        <div style="margin: 20px 0 0 0;">
+            <button id="confirm-name-btn" style="padding: 12px 24px; margin: 0 8px; font-size: 16px; border: none; border-radius: 12px; background: linear-gradient(45deg, #4CAF50, #45a049); color: white; cursor: pointer; font-family: 'PixelDigivolve', 'Courier New', monospace; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(76,175,80,0.4); text-transform: uppercase; font-weight: bold;">✓ Confirmar</button>
+            <button id="cancel-name-btn" style="padding: 12px 24px; margin: 0 8px; font-size: 16px; border: none; border-radius: 12px; background: linear-gradient(45deg, #f44336, #d32f2f); color: white; cursor: pointer; font-family: 'PixelDigivolve', 'Courier New', monospace; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(244,67,54,0.4); text-transform: uppercase; font-weight: bold;">✗ Cancelar</button>
         </div>
-        <div id="name-validation" style="margin: 10px 0 0 0; font-size: 12px; color: #666;"></div>
+        <div id="name-validation" style="margin: 15px 0 0 0; font-size: 14px; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.1);"></div>
     </div>
     
     <script src="flappy-game.js"></script>

@@ -1340,7 +1340,7 @@ class FlappyGame {
         const validChars = /^[a-zA-Z0-9]*$/;
         
         if (name.length === 0) {
-            this.nameValidation.textContent = 'Introduce un nombre (2-15 caracteres)';
+            this.nameValidation.textContent = 'Introduce un nome (2-15 caracteres)';
             this.nameValidation.style.color = '#666';
             this.confirmNameBtn.disabled = true;
             this.confirmNameBtn.style.opacity = '0.5';
@@ -1355,7 +1355,7 @@ class FlappyGame {
             this.confirmNameBtn.disabled = true;
             this.confirmNameBtn.style.opacity = '0.5';
         } else if (!validChars.test(name)) {
-            this.nameValidation.textContent = 'Solo letras y números';
+            this.nameValidation.textContent = 'Só letras e números';
             this.nameValidation.style.color = '#f44336';
             this.confirmNameBtn.disabled = true;
             this.confirmNameBtn.style.opacity = '0.5';
@@ -1370,7 +1370,7 @@ class FlappyGame {
     async confirmName() {
         const name = this.playerNameInput.value.trim();
         if (name.length >= 2 && name.length <= 15 && /^[a-zA-Z0-9]*$/.test(name)) {
-            this.confirmNameBtn.textContent = 'Registrando...';
+            this.confirmNameBtn.textContent = 'Rexistrando...';
             this.confirmNameBtn.disabled = true;
             
             try {
@@ -1386,12 +1386,12 @@ class FlappyGame {
                     this.fetchLeaderboard();
                     this.stopBackgroundVideo();
                 } else {
-                    alert('Error al registrar: ' + result.error);
+                    alert('Erro ao rexistrar: ' + result.error);
                     this.confirmNameBtn.textContent = 'Confirmar';
                     this.confirmNameBtn.disabled = false;
                 }
             } catch (error) {
-                alert('Error de conexión. Inténtalo de nuevo.');
+                alert('Erro de conexión. Téntao de novo.');
                 this.confirmNameBtn.textContent = 'Confirmar';
                 this.confirmNameBtn.disabled = false;
             }
