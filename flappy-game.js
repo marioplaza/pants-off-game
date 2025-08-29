@@ -589,16 +589,13 @@ class FlappyGame {
         this.playSound('lose');
         this.lastScore = this.score;
         
-        // Enviar puntuación al servidor si el usuario está registrado
-        if (this.player.isRegistered) {
-            await this.submitScore(this.score);
-            // Cargar ranking actualizado
-            await this.fetchLeaderboard(10);
-            // No mostrar el modal automáticamente
-            // this.showingGameOverModal = true;
-        }
-        
+        // Cambiar a estado fin inmediatamente para no bloquear la UI
         this.state = 'fin';
+        
+        // Enviar puntuación al servidor en segundo plano si el usuario está registrado
+        if (this.player.isRegistered) {
+            this.submitScoreAsync(this.score);
+        }
     }
     
     updateDifficulty() {
@@ -680,12 +677,7 @@ class FlappyGame {
             const modalX = this.WIDTH / 2 - modalWidth / 2;
             const modalY = this.HEIGHT / 2 - modalHeight / 2;
             
-            // Click fuera del modal para cerrar
-            if (x < modalX || x > modalX + modalWidth || y < modalY || y > modalY + modalHeight) {
-                this.showingGameOverModal = false;
-                this.lastModalCloseTime = Date.now();
-                return;
-            }
+            // Ya no cerrar con click fuera del modal - solo con botón X
             
             // Botón Cerrar (X)
             const closeButton = {
@@ -1005,6 +997,16 @@ class FlappyGame {
             }
         } catch (error) {
             console.error('💥 Error in registerPlayerAsync:', error);
+        }
+    }
+    
+    async submitScoreAsync(score) {
+        try {
+            await this.submitScore(score);
+            await this.fetchLeaderboard(10);
+            console.log('✅ Puntuación enviada y ranking actualizado');
+        } catch (error) {
+            console.error('❌ Error enviando puntuación:', error);
         }
     }
     
