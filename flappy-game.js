@@ -50,9 +50,9 @@ class FlappyGame {
         this.state = 'inicio';
         this.selectedCharacter = 0;
         this.lastScore = 0;
-        this.showingRanking = false;
         this.showingNameInput = false;
         this.lastModalCloseTime = 0;
+        this.rankingPreviousState = null; // Para recordar desde dónde se abrió el ranking
         
         // Assets
         this.images = {};
@@ -320,7 +320,7 @@ class FlappyGame {
             'fonso.webp', 'mauro.webp', 'diego.webp', 'rocky.webp',
             'bajo.webp', 'baquetas.webp', 'guitarra.webp', 'micro.webp',
             'fondo.webp', 'elixeoteupersonaxe.webp', 'xogardenovo.webp', 'edificios.webp',
-            'xogar.webp', 'escoitanos.webp', 'xogar2.webp', 'escoitanos2.webp'
+            'xogar.webp', 'escoitanos.webp', 'xogar2.webp', 'escoitanos2.webp', 'fondo_ranking.webp'
         ];
         
         // Detectar soporte OGG Vorbis para audio optimizado
@@ -334,7 +334,7 @@ class FlappyGame {
             // Música eliminada - ahora usamos video de fondo
         ];
         
-        this.assetsToLoad = imageFiles.length + soundFiles.length + 1; // +1 para el video
+        this.assetsToLoad = imageFiles.length + soundFiles.length + 2; // +1 para el video, +1 para la fuente
         
         // Cargar imágenes
         imageFiles.forEach(filename => {
@@ -430,6 +430,23 @@ class FlappyGame {
             // Si no hay video, marcar como cargado
             this.assetLoaded();
         }
+        
+        // Cargar fuente personalizada
+        this.loadCustomFont();
+    }
+    
+    async loadCustomFont() {
+        try {
+            const font = new FontFace('PixelDigivolve', 'url(assets/fonts/Pixel_Digivolve.otf)');
+            await font.load();
+            document.fonts.add(font);
+            this.customFontLoaded = true;
+            console.log('✅ Fuente personalizada cargada correctamente');
+        } catch (error) {
+            console.warn('⚠️ No se pudo cargar la fuente personalizada:', error);
+            this.customFontLoaded = false;
+        }
+        this.assetLoaded();
     }
     
     assetLoaded() {
@@ -637,14 +654,21 @@ class FlappyGame {
         if (this.state === 'inicio') {
             const xogarButton = {
                 x: this.WIDTH / 2,
-                y: this.HEIGHT * 0.67,
+                y: this.HEIGHT * 0.6,
+                width: 200 * this.scale,
+                height: 60 * this.scale
+            };
+            
+            const rankingButton = {
+                x: this.WIDTH / 2,
+                y: this.HEIGHT * 0.73,
                 width: 200 * this.scale,
                 height: 60 * this.scale
             };
             
             const escoitanosButton = {
                 x: this.WIDTH / 2,
-                y: this.HEIGHT * 0.8,
+                y: this.HEIGHT * 0.86,
                 width: 200 * this.scale,
                 height: 60 * this.scale
             };
@@ -664,36 +688,20 @@ class FlappyGame {
                 }
                 return;
             }
+            // Botón Ranking
+            else if (this.isPointInButton(x, y, rankingButton.x, rankingButton.y, rankingButton.width, rankingButton.height)) {
+                this.playSound('select');
+                this.rankingPreviousState = 'inicio';
+                // Cargar ranking y cambiar a pantalla ranking
+                this.fetchLeaderboard(10).then(() => {
+                    this.state = 'ranking';
+                });
+                return;
+            }
             // Botón Escoitanos
             else if (this.isPointInButton(x, y, escoitanosButton.x, escoitanosButton.y, escoitanosButton.width, escoitanosButton.height)) {
                 this.openSpotify();
             }
-        }
-        // Manejar modal de game over
-        if (this.showingGameOverModal) {
-            // Dimensiones del modal
-            const modalWidth = 400 * this.scale;
-            const modalHeight = 500 * this.scale;
-            const modalX = this.WIDTH / 2 - modalWidth / 2;
-            const modalY = this.HEIGHT / 2 - modalHeight / 2;
-            
-            // Ya no cerrar con click fuera del modal - solo con botón X
-            
-            // Botón Cerrar (X)
-            const closeButton = {
-                x: modalX + modalWidth - 25 * this.scale,
-                y: modalY + 25 * this.scale,
-                width: 30 * this.scale,
-                height: 30 * this.scale
-            };
-            
-            if (this.isPointInButton(x, y, closeButton.x, closeButton.y, closeButton.width, closeButton.height)) {
-                this.showingGameOverModal = false;
-                this.lastModalCloseTime = Date.now();
-                return;
-            }
-            
-            return; // No procesar otros clicks cuando el modal está abierto
         }
         
         else if (this.state === 'menu') {
@@ -747,11 +755,29 @@ class FlappyGame {
             }
             // Botón Ver Ranking (solo si está registrado)
             else if (this.player.isRegistered && this.isPointInButton(x, y, rankingButton.x, rankingButton.y, rankingButton.width, rankingButton.height)) {
-                this.showingGameOverModal = true;
+                this.playSound('select');
+                this.rankingPreviousState = 'fin';
+                this.state = 'ranking';
             }
             // Botón Escoitanos
             else if (this.isPointInButton(x, y, escoitanosButton.x, escoitanosButton.y, escoitanosButton.width, escoitanosButton.height)) {
                 this.openSpotify();
+            }
+        }
+        else if (this.state === 'ranking') {
+            // Botón Volver
+            const volverButton = {
+                x: this.WIDTH / 2,
+                y: this.HEIGHT * 0.9,
+                width: 200 * this.scale,
+                height: 60 * this.scale
+            };
+            
+            if (this.isPointInButton(x, y, volverButton.x, volverButton.y, volverButton.width, volverButton.height)) {
+                this.playSound('select');
+                this.state = this.rankingPreviousState || 'inicio';
+                this.rankingPreviousState = null;
+                return;
             }
         }
     }
@@ -1048,10 +1074,7 @@ class FlappyGame {
                 break;
         }
         
-        // Renderizar modales si están activos
-        if (this.showingGameOverModal) {
-            this.renderGameOverModal();
-        }
+        // Ya no hay modales - todo son pantallas independientes
     }
     
     renderLoading() {
@@ -1095,98 +1118,87 @@ class FlappyGame {
             this.ctx.drawImage(this.images.fondo, 0, 0, this.WIDTH, this.HEIGHT);
         }
         
-        this.drawButton(this.images.xogar, this.WIDTH / 2, this.HEIGHT * 0.67);
-        this.drawButton(this.images.escoitanos, this.WIDTH / 2, this.HEIGHT * 0.8);
-    }
-    
-    
-    renderGameOverModal() {
-        // Overlay semi-transparente
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        this.ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+        this.drawButton(this.images.xogar, this.WIDTH / 2, this.HEIGHT * 0.6);
         
-        // Dimensiones del modal
-        const modalWidth = 400 * this.scale;
-        const modalHeight = 500 * this.scale;
-        const modalX = this.WIDTH / 2 - modalWidth / 2;
-        const modalY = this.HEIGHT / 2 - modalHeight / 2;
-        
-        // Fondo del modal
+        // Botón de ranking personalizado
+        this.ctx.fillStyle = '#FF6B35';
+        this.ctx.fillRect(this.WIDTH / 2 - 100 * this.scale, this.HEIGHT * 0.73 - 30 * this.scale, 200 * this.scale, 60 * this.scale);
         this.ctx.fillStyle = this.WHITE;
-        this.ctx.fillRect(modalX, modalY, modalWidth, modalHeight);
-        
-        // Borde del modal
-        this.ctx.strokeStyle = this.DARK_GRAY;
-        this.ctx.lineWidth = 3;
-        this.ctx.strokeRect(modalX, modalY, modalWidth, modalHeight);
-        
-        // Botón cerrar (X)
-        const closeX = modalX + modalWidth - 30 * this.scale;
-        const closeY = modalY + 15 * this.scale;
-        this.ctx.fillStyle = this.DARK_GRAY;
-        this.ctx.font = `bold ${Math.floor(20 * this.scale)}px Arial`;
+        this.ctx.font = `${Math.max(14, 18 * this.scale)}px monospace`;
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('✕', closeX, closeY + 15 * this.scale);
+        this.ctx.fillText('🏆 RANKING', this.WIDTH / 2, this.HEIGHT * 0.73 + 6 * this.scale);
         
-        // Título del modal
-        this.ctx.fillStyle = this.DARK_GRAY;
-        this.ctx.font = `bold ${Math.floor(24 * this.scale)}px Arial`;
-        this.ctx.fillText('💀 GAME OVER', this.WIDTH / 2, modalY + 50 * this.scale);
-        
-        // Tu puntuación
-        this.ctx.font = `bold ${Math.floor(20 * this.scale)}px Arial`;
-        this.ctx.fillText(`🎯 Tu puntuación: ${this.lastScore}`, this.WIDTH / 2, modalY + 90 * this.scale);
-        
-        // Título del ranking
-        this.ctx.font = `bold ${Math.floor(18 * this.scale)}px Arial`;
-        this.ctx.fillText('🏆 RANKING ACTUAL', this.WIDTH / 2, modalY + 130 * this.scale);
-        
-        // Mostrar top 5 del ranking
-        const startY = modalY + 160 * this.scale;
-        const lineHeight = 25 * this.scale;
-        
-        for (let i = 0; i < Math.min(5, this.ranking.leaderboard.length); i++) {
-            const player = this.ranking.leaderboard[i];
-            const y = startY + i * lineHeight;
-            
-            // Destacar al jugador actual
-            const isCurrentPlayer = player.playerId === this.player.id;
-            this.ctx.fillStyle = isCurrentPlayer ? this.GREEN : this.DARK_GRAY;
-            
-            // Emoji de posición
-            let medal = '';
-            if (i === 0) medal = '🥇';
-            else if (i === 1) medal = '🥈';
-            else if (i === 2) medal = '🥉';
-            else medal = `🎖️`;
-            
-            this.ctx.font = `${isCurrentPlayer ? 'bold ' : ''}${Math.floor(16 * this.scale)}px Arial`;
-            this.ctx.textAlign = 'left';
-            
-            const text = `${medal} ${player.name}`;
-            this.ctx.fillText(text, modalX + 20 * this.scale, y);
-            
-            // Puntuación alineada a la derecha
-            this.ctx.textAlign = 'right';
-            this.ctx.fillText(player.score.toString(), modalX + modalWidth - 20 * this.scale, y);
-        }
-        
-        // Tu posición si no estás en el top 5
-        if (this.ranking.playerRank && this.ranking.playerRank.rank > 5) {
-            const y = startY + 6 * lineHeight;
-            this.ctx.fillStyle = this.GREEN;
-            this.ctx.font = `bold ${Math.floor(16 * this.scale)}px Arial`;
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText(`➡️ Tu posición: #${this.ranking.playerRank.rank} de ${this.ranking.totalPlayers}`, this.WIDTH / 2, y);
-        }
-        
-        // Información adicional
-        this.ctx.fillStyle = '#666';
-        this.ctx.font = `${Math.floor(12 * this.scale)}px Arial`;
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(`Total de jugadores: ${this.ranking.totalPlayers}`, this.WIDTH / 2, modalY + modalHeight - 30 * this.scale);
-        this.ctx.fillText('🖱️ Click fuera para cerrar', this.WIDTH / 2, modalY + modalHeight - 10 * this.scale);
+        this.drawButton(this.images.escoitanos, this.WIDTH / 2, this.HEIGHT * 0.86);
     }
+    
+    renderRanking() {
+        // Fondo específico para ranking
+        if (this.images.fondo_ranking) {
+            this.ctx.drawImage(this.images.fondo_ranking, 0, 0, this.WIDTH, this.HEIGHT);
+        } else if (this.images.fondo) {
+            // Fallback al fondo genérico si no se encuentra el específico
+            this.ctx.drawImage(this.images.fondo, 0, 0, this.WIDTH, this.HEIGHT);
+        }
+        
+        // El título ya está en el fondo, solo mostramos la lista de jugadores
+        if (this.ranking && this.ranking.leaderboard) {
+            const startY = this.HEIGHT * 0.35;
+            const lineHeight = 35 * this.scale;
+            
+            for (let i = 0; i < Math.min(5, this.ranking.leaderboard.length); i++) {
+                const player = this.ranking.leaderboard[i];
+                const y = startY + i * lineHeight;
+                
+                // Destacar al jugador actual
+                const isCurrentPlayer = this.player.isRegistered && player.playerId === this.player.id;
+                this.ctx.fillStyle = isCurrentPlayer ? this.GREEN : this.WHITE;
+                
+                const fontSize = Math.max(16, 20 * this.scale);
+                const fontFamily = this.customFontLoaded ? 'PixelDigivolve' : 'monospace';
+                this.ctx.font = `${isCurrentPlayer ? 'bold ' : ''}${fontSize}px ${fontFamily}`;
+                this.ctx.textAlign = 'left';
+                
+                // Formato simple: "1 - NOMBRE"
+                const text = `${i + 1} - ${player.name}`;
+                this.ctx.fillText(text, this.WIDTH * 0.2, y);
+                
+                // Puntuación alineada a la derecha
+                this.ctx.textAlign = 'right';
+                this.ctx.fillText(player.score.toString(), this.WIDTH * 0.8, y);
+            }
+            
+            // Tu posición si no estás en el top 5
+            if (this.ranking.playerRank && this.ranking.playerRank.rank > 5) {
+                const y = startY + 6 * lineHeight;
+                this.ctx.fillStyle = this.GREEN;
+                const fontSize = Math.max(14, 16 * this.scale);
+                const fontFamily = this.customFontLoaded ? 'PixelDigivolve' : 'monospace';
+                this.ctx.font = `bold ${fontSize}px ${fontFamily}`;
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(`➡️ Tu posición: #${this.ranking.playerRank.rank} de ${this.ranking.totalPlayers}`, this.WIDTH / 2, y);
+            }
+            
+            // Información adicional
+            this.ctx.fillStyle = '#CCC';
+            const infoFontSize = Math.max(12, 14 * this.scale);
+            const fontFamily = this.customFontLoaded ? 'PixelDigivolve' : 'monospace';
+            this.ctx.font = `${infoFontSize}px ${fontFamily}`;
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(`Total de jugadores: ${this.ranking.totalPlayers}`, this.WIDTH / 2, this.HEIGHT * 0.75);
+        }
+        
+        // Botón Volver
+        this.ctx.fillStyle = '#666';
+        this.ctx.fillRect(this.WIDTH / 2 - 100 * this.scale, this.HEIGHT * 0.9 - 30 * this.scale, 200 * this.scale, 60 * this.scale);
+        this.ctx.fillStyle = this.WHITE;
+        const buttonFontSize = Math.max(14, 18 * this.scale);
+        const fontFamily = this.customFontLoaded ? 'PixelDigivolve' : 'monospace';
+        this.ctx.font = `${buttonFontSize}px ${fontFamily}`;
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('⬅️ VOLVER', this.WIDTH / 2, this.HEIGHT * 0.9 + 6 * this.scale);
+    }
+    
+    
     
     renderMenu() {
         if (this.images.elixeoteupersonaxe) {
