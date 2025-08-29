@@ -661,7 +661,12 @@ class FlappyGame {
             };
             
             // Botón Xogar - verificar si usuario está registrado
+            console.log('🎮 Verificando botón Xogar...');
+            console.log('📦 Xogar bounds:', xogarButton.x - xogarButton.width/2, xogarButton.y - xogarButton.height/2, xogarButton.x + xogarButton.width/2, xogarButton.y + xogarButton.height/2);
+            
             if (this.isPointInButton(x, y, xogarButton.x, xogarButton.y, xogarButton.width, xogarButton.height)) {
+                console.log('🎮 ¡CLICK EN BOTÓN XOGAR!');
+                console.log('📝 inputText antes de resetear:', `"${this.inputText}"`);
                 this.playSound('select');
                 if (this.player.isRegistered) {
                     this.state = 'menu';
@@ -670,6 +675,7 @@ class FlappyGame {
                 } else {
                     this.showingRegistrationModal = true;
                     this.inputText = '';
+                    console.log('📝 inputText después de resetear:', `"${this.inputText}"`);
                 }
             }
             // Botón Escoitanos
