@@ -50,10 +50,8 @@ class FlappyGame {
         this.state = 'inicio';
         this.selectedCharacter = 0;
         this.lastScore = 0;
-        this.inputText = '';
         this.showingRanking = false;
-        this.showingRegistrationModal = false;
-        this.showingGameOverModal = false;
+        this.showingNameInput = false;
         
         // Assets
         this.images = {};
@@ -221,48 +219,36 @@ class FlappyGame {
     }
     
     setupEventListeners() {
+        // Referencias a elementos del DOM
+        this.nameInputContainer = document.getElementById('name-input-container');
+        this.playerNameInput = document.getElementById('player-name-input');
+        this.confirmNameBtn = document.getElementById('confirm-name-btn');
+        this.cancelNameBtn = document.getElementById('cancel-name-btn');
+        this.nameValidation = document.getElementById('name-validation');
+        
+        // Event listeners para el input de nombre
+        this.confirmNameBtn.addEventListener('click', () => this.confirmName());
+        this.cancelNameBtn.addEventListener('click', () => this.cancelName());
+        
+        // Enter para confirmar nombre
+        this.playerNameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.confirmName();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                this.cancelName();
+            }
+        });
+        
+        // Validación en tiempo real
+        this.playerNameInput.addEventListener('input', () => this.validateName());
+        
         // Teclado
         document.addEventListener('keydown', (e) => {
             this.keys[e.code] = true;
             
-            if (this.showingRegistrationModal) {
-                console.log('⌨️ TECLA EN MODAL:', e.key, 'Code:', e.code);
-                console.log('📱 Es móvil?', this.isMobile);
-                console.log('📝 inputText antes:', `"${this.inputText}"`);
-                
-                // Manejar input de texto para registro
-                if (e.key === 'Backspace') {
-                    e.preventDefault();
-                    this.inputText = this.inputText.slice(0, -1);
-                    console.log('🔙 Backspace - texto después:', this.inputText);
-
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    console.log('↩️ Enter presionado');
-
-                    if (this.inputText.length >= 2 && this.inputText.length <= 15) {
-                        console.log('✅ Enter válido - registrando...');
-                        this.registerPlayerAsync(this.inputText);
-                    } else {
-                        console.log('❌ Enter inválido - longitud:', this.inputText.length);
-                    }
-                } else if (e.key === 'Escape') {
-                    e.preventDefault();
-                    console.log('🚫 Escape - cerrando modal');
-                    if (this.isMobile) this.hideMobileInput();
-                    this.showingRegistrationModal = false;
-                } else if (e.key.length === 1 && /^[a-zA-Z0-9]$/.test(e.key)) {
-                    e.preventDefault();
-                    if (this.inputText.length < 15) {
-                        this.inputText += e.key;
-                        console.log('📝 Añadida letra:', e.key, '- texto después:', this.inputText);
-                    } else {
-                        console.log('❌ Texto lleno, no se añade:', e.key);
-                    }
-                } else {
-                    console.log('❓ Tecla no manejada:', e.key);
-                }
-            } else if (e.code === 'Space') {
+            if (e.code === 'Space') {
                 e.preventDefault();
                 if (this.state === 'jugando') {
                     this.velocity = this.jump;
@@ -643,7 +629,6 @@ class FlappyGame {
         console.log('📝 inputText AL INICIO de handleClick:', `"${this.inputText}"`);
         console.log('📍 Click en coordenadas:', x, y);
         console.log('🎭 Estado actual:', this.state);
-        console.log('📱 Modal registro visible?', this.showingRegistrationModal);
         
         if (this.state === 'inicio') {
             const xogarButton = {
@@ -665,152 +650,21 @@ class FlappyGame {
             console.log('📦 Xogar bounds:', xogarButton.x - xogarButton.width/2, xogarButton.y - xogarButton.height/2, xogarButton.x + xogarButton.width/2, xogarButton.y + xogarButton.height/2);
             
             if (this.isPointInButton(x, y, xogarButton.x, xogarButton.y, xogarButton.width, xogarButton.height)) {
-                console.log('🎮 ¡CLICK EN BOTÓN XOGAR!');
-                console.log('📝 inputText antes de resetear:', `"${this.inputText}"`);
                 this.playSound('select');
                 if (this.player.isRegistered) {
                     this.state = 'menu';
-                    this.fetchLeaderboard(); // Cargar ranking actual
-                    this.stopBackgroundVideo(); // Pausar video al volver al menú
+                    this.fetchLeaderboard();
+                    this.stopBackgroundVideo();
                 } else {
-                    this.showingRegistrationModal = true;
-                    this.inputText = '';
-                    console.log('📝 inputText después de resetear:', `"${this.inputText}"`);
+                    this.showNameInput();
                 }
+                return;
             }
             // Botón Escoitanos
             else if (this.isPointInButton(x, y, escoitanosButton.x, escoitanosButton.y, escoitanosButton.width, escoitanosButton.height)) {
                 this.openSpotify();
             }
         }
-        // Manejar modal de registro
-        if (this.showingRegistrationModal) {
-            // Dimensiones del modal
-            const modalWidth = 350 * this.scale;
-            const modalHeight = 400 * this.scale;
-            const modalX = this.WIDTH / 2 - modalWidth / 2;
-            const modalY = this.HEIGHT / 2 - modalHeight / 2;
-            
-            // Click fuera del modal para cerrar
-            if (x < modalX || x > modalX + modalWidth || y < modalY || y > modalY + modalHeight) {
-                console.log('🚨 CLICK FUERA DEL MODAL - CERRANDO');
-                console.log('📍 Click:', x, y);
-                console.log('📦 Modal bounds:', modalX, modalY, modalX + modalWidth, modalY + modalHeight);
-                console.log('📝 inputText antes de cerrar:', `"${this.inputText}"`);
-                
-                if (this.isMobile) this.hideMobileInput();
-                this.showingRegistrationModal = false;
-                return;
-            }
-            
-            // Campo de input - activar teclado móvil
-            const inputWidth = 280 * this.scale;
-            const inputHeight = 50 * this.scale;
-            const inputX = this.WIDTH / 2 - inputWidth / 2;
-            const inputY = this.HEIGHT / 2 - 30 * this.scale;
-            
-            if (x >= inputX && x <= inputX + inputWidth && 
-                y >= inputY && y <= inputY + inputHeight) {
-                console.log('🔍 CLICK EN CAMPO DE TEXTO');
-                console.log('📱 Es móvil?', this.isMobile);
-                console.log('📝 inputText antes:', `"${this.inputText}"`);
-                
-                if (this.isMobile && this.mobileInput && !this.mobileInput.disabled) {
-                    console.log('📱 CONFIGURANDO INPUT MÓVIL...');
-                    
-                    // Input visible temporal para móvil
-                    this.mobileInput.style.position = 'fixed';
-                    this.mobileInput.style.top = '50%';
-                    this.mobileInput.style.left = '50%';
-                    this.mobileInput.style.transform = 'translate(-50%, -50%)';
-                    this.mobileInput.style.zIndex = '10000';
-                    this.mobileInput.style.opacity = '1';
-                    this.mobileInput.style.pointerEvents = 'auto';
-                    this.mobileInput.style.fontSize = '16px';
-                    this.mobileInput.style.padding = '10px';
-                    this.mobileInput.style.border = '2px solid #333';
-                    this.mobileInput.style.borderRadius = '5px';
-                    this.mobileInput.style.backgroundColor = 'white';
-                    this.mobileInput.style.width = '250px';
-                    this.mobileInput.style.maxLength = '15';
-                    
-                    this.mobileInput.value = this.inputText;
-                    console.log('📝 Input value establecido:', this.mobileInput.value);
-                    
-                    this.mobileInput.focus();
-                    console.log('🎯 Focus aplicado');
-                    
-                    // Listener simple solo para sincronizar
-                    this.mobileInput.oninput = (e) => {
-                        console.log('📱 INPUT MÓVIL CAMBIÓ:', e.target.value);
-                        this.inputText = e.target.value.replace(/[^a-zA-Z0-9]/g, '').substring(0, 15);
-                        e.target.value = this.inputText;
-                        console.log('📝 inputText sincronizado:', this.inputText);
-                    };
-                    
-                    // Submit con Enter
-                    this.mobileInput.onkeydown = (e) => {
-                        console.log('⌨️ Tecla en input móvil:', e.key);
-                        if (e.key === 'Enter' && this.inputText.length >= 2 && this.inputText.length <= 15) {
-                            console.log('↩️ Enter válido - registrando...');
-                            e.preventDefault();
-                            this.hideMobileInput();
-                            this.registerPlayerAsync(this.inputText);
-                        }
-                    };
-                    
-                    console.log('✅ Input móvil configurado completamente');
-                } else {
-                    console.log('💻 PC - usando keydown del canvas');
-                }
-                return;
-            }
-            
-            // Botón Guardar
-            const saveButton = {
-                x: this.WIDTH / 2,
-                y: this.HEIGHT / 2 + 120 * this.scale,
-                width: 180 * this.scale,
-                height: 50 * this.scale
-            };
-            
-            console.log('🔍 JUSTO ANTES DE VERIFICAR BOTÓN GUARDAR');
-            console.log('📝 inputText aquí:', `"${this.inputText}"`);
-            
-            if (this.isPointInButton(x, y, saveButton.x, saveButton.y, saveButton.width, saveButton.height)) {
-                console.log('💾 CLICK EN BOTÓN GUARDAR');
-                console.log('📱 Es móvil?', this.isMobile);
-                console.log('📝 this.inputText:', `"${this.inputText}"`, 'longitud:', this.inputText.length);
-                console.log('🎯 mobileInput.value:', this.mobileInput ? `"${this.mobileInput.value}"` : 'N/A');
-                console.log('🔧 mobileInput.disabled:', this.mobileInput ? this.mobileInput.disabled : 'N/A');
-                
-                if (this.inputText.length >= 2 && this.inputText.length <= 15) {
-                    console.log('✅ Texto válido - registrando...');
-                    this.playSound('select');
-                    this.registerPlayerAsync(this.inputText);
-                } else {
-                    console.log('❌ Texto inválido');
-                    console.log('🔄 Longitud actual:', this.inputText.length);
-                    console.log('📋 Caracteres válidos: 2-15');
-                }
-            }
-            
-            // Botón Cerrar (X)
-            const closeButton = {
-                x: modalX + modalWidth - 25 * this.scale,
-                y: modalY + 25 * this.scale,
-                width: 30 * this.scale,
-                height: 30 * this.scale
-            };
-            
-            if (this.isPointInButton(x, y, closeButton.x, closeButton.y, closeButton.width, closeButton.height)) {
-                if (this.isMobile) this.hideMobileInput();
-                this.showingRegistrationModal = false;
-            }
-            
-            return; // No procesar otros clicks cuando el modal está abierto
-        }
-        
         // Manejar modal de game over
         if (this.showingGameOverModal) {
             // Dimensiones del modal
@@ -1122,9 +976,7 @@ class FlappyGame {
             console.log('📥 Resultado de registerPlayer:', result);
             
             if (result.success) {
-                console.log('✅ Registro exitoso, cerrando modal y yendo al menú');
-                if (this.isMobile) this.hideMobileInput();
-                this.showingRegistrationModal = false;
+                console.log('✅ Registro exitoso, yendo al menú');
                 this.state = 'menu';
                 this.fetchLeaderboard(); // Cargar ranking después del registro
                 this.stopBackgroundVideo(); // Pausar video al ir al menú
@@ -1175,9 +1027,6 @@ class FlappyGame {
         }
         
         // Renderizar modales si están activos
-        if (this.showingRegistrationModal) {
-            this.renderRegistrationModal();
-        }
         if (this.showingGameOverModal) {
             this.renderGameOverModal();
         }
@@ -1228,101 +1077,6 @@ class FlappyGame {
         this.drawButton(this.images.escoitanos, this.WIDTH / 2, this.HEIGHT * 0.8);
     }
     
-    renderRegistrationModal() {
-        // Overlay semi-transparente
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(0, 0, this.WIDTH, this.HEIGHT);
-        
-        // Dimensiones del modal
-        const modalWidth = 350 * this.scale;
-        const modalHeight = 400 * this.scale;
-        const modalX = this.WIDTH / 2 - modalWidth / 2;
-        const modalY = this.HEIGHT / 2 - modalHeight / 2;
-        
-        // Fondo del modal
-        this.ctx.fillStyle = this.WHITE;
-        this.ctx.fillRect(modalX, modalY, modalWidth, modalHeight);
-        
-        // Borde del modal
-        this.ctx.strokeStyle = this.DARK_GRAY;
-        this.ctx.lineWidth = 3;
-        this.ctx.strokeRect(modalX, modalY, modalWidth, modalHeight);
-        
-        // Botón cerrar (X)
-        const closeX = modalX + modalWidth - 30 * this.scale;
-        const closeY = modalY + 15 * this.scale;
-        this.ctx.fillStyle = this.DARK_GRAY;
-        this.ctx.font = `bold ${Math.floor(20 * this.scale)}px Arial`;
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('✕', closeX, closeY + 15 * this.scale);
-        
-        // Título del modal
-        this.ctx.fillStyle = this.DARK_GRAY;
-   
-        
-        // Subtítulo
-        this.ctx.font = `${Math.floor(18 * this.scale)}px Arial`;
-        this.ctx.fillText('👤 ¡Bienvenido/a!', this.WIDTH / 2, modalY + 100 * this.scale);
-        
-        // Instrucción
-        this.ctx.font = `${Math.floor(16 * this.scale)}px Arial`;
-        this.ctx.fillText('📝 Introduce tu nombre:', this.WIDTH / 2, modalY + 140 * this.scale);
-        
-        // Campo de texto
-        const inputWidth = 280 * this.scale;
-        const inputHeight = 50 * this.scale;
-        const inputX = this.WIDTH / 2 - inputWidth / 2;
-        const inputY = this.HEIGHT / 2 - 30 * this.scale;
-        
-        // Fondo del input
-        this.ctx.fillStyle = '#f8f9fa';
-        this.ctx.fillRect(inputX, inputY, inputWidth, inputHeight);
-        
-        // Borde del input
-        this.ctx.strokeStyle = this.inputText.length >= 2 ? this.GREEN : this.DARK_GRAY;
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(inputX, inputY, inputWidth, inputHeight);
-        
-        // Texto del input
-        this.ctx.fillStyle = this.BLACK;
-        this.ctx.font = `${Math.floor(18 * this.scale)}px Arial`;
-        this.ctx.textAlign = 'left';
-        this.ctx.fillText(this.inputText, inputX + 15 * this.scale, inputY + inputHeight / 2 + 6 * this.scale);
-        
-        // Cursor parpadeante
-        if (Math.floor(Date.now() / 500) % 2) {
-            const textWidth = this.ctx.measureText(this.inputText).width;
-            this.ctx.fillRect(inputX + 15 * this.scale + textWidth + 2, inputY + 12 * this.scale, 2, inputHeight - 24 * this.scale);
-        }
-        
-        // Botón Guardar
-        const buttonY = this.HEIGHT / 2 + 120 * this.scale;
-        const buttonEnabled = this.inputText.length >= 2 && this.inputText.length <= 15;
-        
-        // Fondo del botón
-        this.ctx.fillStyle = buttonEnabled ? this.GREEN : this.DARK_GRAY;
-        const buttonWidth = 180 * this.scale;
-        const buttonHeight = 50 * this.scale;
-        this.ctx.fillRect(this.WIDTH / 2 - buttonWidth / 2, buttonY - buttonHeight / 2, buttonWidth, buttonHeight);
-        
-        // Texto del botón
-        this.ctx.fillStyle = this.WHITE;
-        this.ctx.font = `bold ${Math.floor(16 * this.scale)}px Arial`;
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('💾 GUARDAR Y JUGAR', this.WIDTH / 2, buttonY + 5 * this.scale);
-        
-        // Información
-        this.ctx.fillStyle = this.DARK_GRAY;
-        this.ctx.font = `${Math.floor(12 * this.scale)}px Arial`;
-        this.ctx.fillText(`(${this.inputText.length}/15 caracteres)`, this.WIDTH / 2, modalY + modalHeight - 40 * this.scale);
-        
-        // Instrucción específica para móvil
-        if (this.isMobile) {
-            this.ctx.fillStyle = '#666';
-            this.ctx.font = `${Math.floor(11 * this.scale)}px Arial`;
-            this.ctx.fillText('📱 Toca el campo de texto para escribir', this.WIDTH / 2, modalY + modalHeight - 20 * this.scale);
-        }
-    }
     
     renderGameOverModal() {
         // Overlay semi-transparente
@@ -1519,6 +1273,87 @@ class FlappyGame {
             const height = image.height * buttonScale;
             this.ctx.drawImage(image, x - width/2, y - height/2, width, height);
         }
+    }
+    
+    // Funciones para el input de nombre
+    showNameInput() {
+        this.showingNameInput = true;
+        this.nameInputContainer.style.display = 'block';
+        this.playerNameInput.value = '';
+        this.playerNameInput.focus();
+        this.validateName();
+    }
+    
+    hideNameInput() {
+        this.showingNameInput = false;
+        this.nameInputContainer.style.display = 'none';
+    }
+    
+    validateName() {
+        const name = this.playerNameInput.value.trim();
+        const validChars = /^[a-zA-Z0-9]*$/;
+        
+        if (name.length === 0) {
+            this.nameValidation.textContent = 'Introduce un nombre (2-15 caracteres)';
+            this.nameValidation.style.color = '#666';
+            this.confirmNameBtn.disabled = true;
+            this.confirmNameBtn.style.opacity = '0.5';
+        } else if (name.length < 2) {
+            this.nameValidation.textContent = 'Mínimo 2 caracteres';
+            this.nameValidation.style.color = '#f44336';
+            this.confirmNameBtn.disabled = true;
+            this.confirmNameBtn.style.opacity = '0.5';
+        } else if (name.length > 15) {
+            this.nameValidation.textContent = 'Máximo 15 caracteres';
+            this.nameValidation.style.color = '#f44336';
+            this.confirmNameBtn.disabled = true;
+            this.confirmNameBtn.style.opacity = '0.5';
+        } else if (!validChars.test(name)) {
+            this.nameValidation.textContent = 'Solo letras y números';
+            this.nameValidation.style.color = '#f44336';
+            this.confirmNameBtn.disabled = true;
+            this.confirmNameBtn.style.opacity = '0.5';
+        } else {
+            this.nameValidation.textContent = `¡Perfecto! (${name.length}/15)`;
+            this.nameValidation.style.color = '#4CAF50';
+            this.confirmNameBtn.disabled = false;
+            this.confirmNameBtn.style.opacity = '1';
+        }
+    }
+    
+    async confirmName() {
+        const name = this.playerNameInput.value.trim();
+        if (name.length >= 2 && name.length <= 15 && /^[a-zA-Z0-9]*$/.test(name)) {
+            this.confirmNameBtn.textContent = 'Registrando...';
+            this.confirmNameBtn.disabled = true;
+            
+            try {
+                const result = await this.registerPlayer(name);
+                if (result.success) {
+                    // Guardar datos del jugador
+                    this.player.name = name;
+                    this.player.isRegistered = true;
+                    localStorage.setItem('flappy_player', JSON.stringify(this.player));
+                    
+                    this.hideNameInput();
+                    this.state = 'menu';
+                    this.fetchLeaderboard();
+                    this.stopBackgroundVideo();
+                } else {
+                    alert('Error al registrar: ' + result.error);
+                    this.confirmNameBtn.textContent = 'Confirmar';
+                    this.confirmNameBtn.disabled = false;
+                }
+            } catch (error) {
+                alert('Error de conexión. Inténtalo de nuevo.');
+                this.confirmNameBtn.textContent = 'Confirmar';
+                this.confirmNameBtn.disabled = false;
+            }
+        }
+    }
+    
+    cancelName() {
+        this.hideNameInput();
     }
 }
 
