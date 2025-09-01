@@ -85,7 +85,7 @@ export class RankingScene extends Phaser.Scene {
         const currentPlayerId = this.playerManager.getPlayerId();
         
         // Lista de top jugadores - ajustada para encajar mejor en el fondo
-        const startY = 160; // Bajado un poco más
+        const startY = 175; // Bajado un poco más
         for (let i = 0; i < Math.min(5, leaderboard.length); i++) {
             const player = leaderboard[i];
             const y = startY + (i * 30); // Menos espaciado vertical
