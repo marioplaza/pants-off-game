@@ -6,33 +6,33 @@ export class AssetLoader {
         // ===================
         
         // Personajes
-        scene.load.image('fonso', 'assets/images/fonso.webp');
-        scene.load.image('mauro', 'assets/images/mauro.webp');
-        scene.load.image('diego', 'assets/images/diego.webp');
-        scene.load.image('rocky', 'assets/images/rocky.webp');
+        scene.load.image('fonso', '/assets/images/fonso.webp');
+        scene.load.image('mauro', '/assets/images/mauro.webp');
+        scene.load.image('diego', '/assets/images/diego.webp');
+        scene.load.image('rocky', '/assets/images/rocky.webp');
         
         // Instrumentos coleccionables
-        scene.load.image('bajo', 'assets/images/bajo.webp');
-        scene.load.image('baquetas', 'assets/images/baquetas.webp');
-        scene.load.image('guitarra', 'assets/images/guitarra.webp');
-        scene.load.image('micro', 'assets/images/micro.webp');
+        scene.load.image('bajo', '/assets/images/bajo.webp');
+        scene.load.image('baquetas', '/assets/images/baquetas.webp');
+        scene.load.image('guitarra', '/assets/images/guitarra.webp');
+        scene.load.image('micro', '/assets/images/micro.webp');
         
         // Fondos y escenarios
-        scene.load.image('fondo', 'assets/images/fondo.webp');
-        scene.load.image('edificios', 'assets/images/edificios.webp');
-        scene.load.image('fondo_ranking', 'assets/images/fondo_ranking.webp');
+        scene.load.image('fondo', '/assets/images/fondo.webp');
+        scene.load.image('edificios', '/assets/images/edificios.webp');
+        scene.load.image('fondo_ranking', '/assets/images/fondo_ranking.webp');
         
         // Botones e interfaz
-        scene.load.image('xogar', 'assets/images/xogar.webp');
-        scene.load.image('xogar2', 'assets/images/xogar2.webp');
-        scene.load.image('xogardenovo', 'assets/images/xogardenovo.webp');
-        scene.load.image('escoitanos', 'assets/images/escoitanos.webp');
-        scene.load.image('escoitanos2', 'assets/images/escoitanos2.webp');
-        scene.load.image('elixeoteupersonaxe', 'assets/images/elixeoteupersonaxe.webp');
+        scene.load.image('xogar', '/assets/images/xogar.webp');
+        scene.load.image('xogar2', '/assets/images/xogar2.webp');
+        scene.load.image('xogardenovo', '/assets/images/xogardenovo.webp');
+        scene.load.image('escoitanos', '/assets/images/escoitanos.webp');
+        scene.load.image('escoitanos2', '/assets/images/escoitanos2.webp');
+        scene.load.image('elixeoteupersonaxe', '/assets/images/elixeoteupersonaxe.webp');
         
         // Pájaro y elementos de juego
-        scene.load.image('pajaro', 'assets/images/pajaro.webp');
-        scene.load.image('cadenas', 'assets/images/cadenas.webp');
+        scene.load.image('pajaro', '/assets/images/pajaro.webp');
+        scene.load.image('cadenas', '/assets/images/cadenas.webp');
         
         // ===================
         // FUENTES
@@ -45,20 +45,20 @@ export class AssetLoader {
         // ===================
         
         // Video de fondo para el juego
-        scene.load.video('background-video', 'assets/background-video.mp4');
+        scene.load.video('background-video', '/assets/background-video.mp4');
         
         // ===================
         // AUDIO
         // ===================
         
         // Música de fondo
-        scene.load.audio('cancion', 'assets/sounds/cancion.mp3');
-        scene.load.audio('melodia', 'assets/sounds/melodia.mp3');
+        scene.load.audio('cancion', '/assets/sounds/cancion.mp3');
+        scene.load.audio('melodia', '/assets/sounds/melodia.mp3');
         
         // Efectos de sonido (con fallback)
-        scene.load.audio('select', ['assets/sounds/select.ogg', 'assets/sounds/select.wav']);
-        scene.load.audio('pickup', ['assets/sounds/pickup.ogg', 'assets/sounds/pickup.wav']);
-        scene.load.audio('lose', ['assets/sounds/lose.ogg', 'assets/sounds/lose.wav']);
+        scene.load.audio('select', ['/assets/sounds/select.ogg', '/assets/sounds/select.wav']);
+        scene.load.audio('pickup', ['/assets/sounds/pickup.ogg', '/assets/sounds/pickup.wav']);
+        scene.load.audio('lose', ['/assets/sounds/lose.ogg', '/assets/sounds/lose.wav']);
         
         console.log('AssetLoader: Todos los assets configurados para carga');
     }
