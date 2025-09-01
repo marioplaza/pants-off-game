@@ -1,0 +1,86 @@
+export class GameOverScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameOverScene' });
+    }
+
+    init(data) {
+        this.finalScore = data.score || 0;
+        this.selectedCharacter = data.character || 'fonso';
+    }
+
+    preload() {
+        console.log('GameOverScene: Cargando assets...');
+    }
+
+    create() {
+        console.log('GameOverScene: Creando pantalla de Game Over...');
+        
+        // Fondo de la pantalla de fin (como en el original)
+        const background = this.add.image(200, 300, 'xogardenovo');
+        background.setDisplaySize(400, 600);
+        
+        // Mostrar puntuación final (posición como en el original Y = 0.52 * 600 = 312)
+        this.add.text(200, 312, `Puntuación: ${this.finalScore}`, {
+            fontSize: '20px',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontFamily: 'monospace'
+        }).setOrigin(0.5);
+        
+        // Botón XOGAR DE NOVO (jugar de nuevo) - posición original Y = 0.6 * 600 = 360
+        const playAgainButton = this.add.image(200, 360, 'xogar2');
+        playAgainButton.setDisplaySize(200, playAgainButton.height * (200 / playAgainButton.width));
+        playAgainButton.setInteractive({ useHandCursor: true });
+        playAgainButton.on('pointerdown', () => {
+            this.sound.play('select', { volume: 0.3 });
+            this.scene.start('CharacterSelectScene'); // Volver a selección de personaje
+        });
+        
+        // Botón de ranking - posición original Y = 0.73 * 600 = 438
+        const rankingButton = this.add.rectangle(200, 438, 200, 60, 0x4CAF50);
+        const rankingText = this.add.text(200, 438, '🏆 RANKING', {
+            fontSize: '18px',
+            fill: '#ffffff',
+            fontFamily: 'monospace'
+        }).setOrigin(0.5);
+        
+        rankingButton.setInteractive({ useHandCursor: true });
+        rankingButton.on('pointerdown', () => {
+            this.sound.play('select', { volume: 0.3 });
+            this.scene.start('RankingScene', { previousState: 'fin' });
+        });
+        
+        // Botón ESCOÍTANOS - posición original Y = 0.86 * 600 = 516
+        const spotifyButton = this.add.image(200, 516, 'escoitanos2');
+        spotifyButton.setDisplaySize(200, spotifyButton.height * (200 / spotifyButton.width));
+        spotifyButton.setInteractive({ useHandCursor: true });
+        spotifyButton.on('pointerdown', () => {
+            this.sound.play('select', { volume: 0.3 });
+            this.openSpotify();
+        });
+        
+        // Efectos hover en todos los botones
+        [playAgainButton, rankingButton, spotifyButton].forEach(button => {
+            button.on('pointerover', () => {
+                button.setScale(1.1);
+            });
+            button.on('pointerout', () => {
+                button.setScale(1.0);
+            });
+        });
+    }
+    
+    openSpotify() {
+        const spotifyWebUrl = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82';
+        
+        try {
+            const newWindow = window.open(spotifyWebUrl, '_blank', 'noopener,noreferrer');
+            if (!newWindow) {
+                window.location.href = spotifyWebUrl;
+            }
+        } catch (error) {
+            window.location.href = spotifyWebUrl;
+        }
+    }
+}

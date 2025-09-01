@@ -1,20 +1,19 @@
 {
-  "name": "flappy-bird-banda-edition",
+  "name": "flappy-phaser",
   "version": "1.0.0",
-  "description": "Flappy Bird game with band theme and global ranking system",
-  "main": "index.html",
+  "type": "module",
+  "main": "src/main.js",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'No build step required'",
-    "start": "serve ."
-  },
-  "dependencies": {
-    "@upstash/redis": "^1.28.2"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "devDependencies": {
-    "serve": "^14.2.1"
+    "phaser": "^3.70.0",
+    "vite": "^5.0.0"
   },
-  "keywords": ["game", "flappy-bird", "javascript", "canvas", "ranking"],
-  "author": "Mario Plaza",
-  "license": "MIT"
+  "keywords": ["phaser", "game", "flappy"],
+  "author": "",
+  "license": "ISC",
+  "description": "Flappy Game migrated to Phaser.js"
 }
