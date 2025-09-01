@@ -397,7 +397,7 @@ class FlappyGame {
                     audio.volume = 0.3; // Volumen moderado para música de fondo
                     audio.loop = true; // La melodía debe repetirse
                 } else {
-                    audio.volume = 0.1; // Volumen bajo para efectos de sonido
+                    audio.volume = 0.05; // Volumen bajo para efectos de sonido
                 }
                 audio.preload = 'auto';
                 
