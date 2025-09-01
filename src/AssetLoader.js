@@ -26,6 +26,8 @@ export class AssetLoader {
         scene.load.image('xogar', '/assets/images/xogar.webp');
         scene.load.image('xogar2', '/assets/images/xogar2.webp');
         scene.load.image('xogardenovo', '/assets/images/xogardenovo.webp');
+        scene.load.image('btn_ver_ranking', '/assets/images/btn_ver_ranking.webp');
+        scene.load.image('btn_ver_ranking2', '/assets/images/btn_ver_ranking2.webp');
         scene.load.image('escoitanos', '/assets/images/escoitanos.webp');
         scene.load.image('escoitanos2', '/assets/images/escoitanos2.webp');
         scene.load.image('elixeoteupersonaxe', '/assets/images/elixeoteupersonaxe.webp');

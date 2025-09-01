@@ -81,14 +81,9 @@ export class MainMenuScene extends Phaser.Scene {
             this.scene.start('CharacterSelectScene');
         });
         
-        // Botón RANKING - Como en el original
-        const rankingButton = this.add.rectangle(200, 415, 200, 60, 0xFF6B35);
-        const rankingText = this.add.text(200, 415, '🏆 RANKING', {
-            fontSize: '18px',
-            fill: '#ffffff',
-            fontFamily: 'monospace'
-        }).setOrigin(0.5);
-        
+        // Botón RANKING usando asset de imagen
+        const rankingButton = this.add.image(200, 455, 'btn_ver_ranking');
+        rankingButton.setDisplaySize(200, rankingButton.height * (200 / rankingButton.width));
         rankingButton.setInteractive({ useHandCursor: true });
         rankingButton.on('pointerdown', () => {
             this.sound.play('select', { volume: 0.3 });
@@ -116,12 +111,14 @@ export class MainMenuScene extends Phaser.Scene {
             });
         });
         
-        // Efecto hover para botón ranking (rectángulo)
+        // Efecto hover para botón ranking (imagen)
+        const rbw = rankingButton.displayWidth;
+        const rbh = rankingButton.displayHeight;
         rankingButton.on('pointerover', () => {
-            rankingButton.setScale(1.1);
+            rankingButton.setDisplaySize(rbw * 1.1, rbh * 1.1);
         });
         rankingButton.on('pointerout', () => {
-            rankingButton.setScale(1.0);
+            rankingButton.setDisplaySize(rbw, rbh);
         });
     
         

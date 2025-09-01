@@ -39,14 +39,9 @@ export class GameOverScene extends Phaser.Scene {
             this.scene.start('CharacterSelectScene'); // Volver a selección de personaje
         });
         
-        // Botón de ranking - posición original Y = 0.73 * 600 = 438
-        const rankingButton = this.add.rectangle(200, 438, 200, 60, 0x4CAF50);
-        const rankingText = this.add.text(200, 438, '🏆 RANKING', {
-            fontSize: '18px',
-            fill: '#ffffff',
-            fontFamily: 'monospace'
-        }).setOrigin(0.5);
-        
+        // Botón de ranking (imagen)
+        const rankingButton = this.add.image(200, 438, 'btn_ver_ranking2');
+        rankingButton.setDisplaySize(200, rankingButton.height * (200 / rankingButton.width));
         rankingButton.setInteractive({ useHandCursor: true });
         rankingButton.on('pointerdown', () => {
             this.sound.play('select', { volume: 0.3 });
