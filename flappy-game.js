@@ -330,8 +330,8 @@ class FlappyGame {
         const soundFiles = [
             supportsOgg ? 'select.ogg' : 'select.wav',
             supportsOgg ? 'pickup.ogg' : 'pickup.wav',
-            supportsOgg ? 'lose.ogg' : 'lose.wav'
-            // Música eliminada - ahora usamos video de fondo
+            supportsOgg ? 'lose.ogg' : 'lose.wav',
+            'melodia.mp3' // Audio de fondo para el juego
         ];
         
         this.assetsToLoad = imageFiles.length + soundFiles.length + 2; // +1 para el video, +1 para la fuente
@@ -392,7 +392,13 @@ class FlappyGame {
                 }, 1000);
                 
                 audio.src = `assets/sounds/${filename}`;
-                audio.volume = 0.1; // Todos son efectos de sonido
+                // Configurar volumen según el tipo de audio
+                if (soundName === 'melodia') {
+                    audio.volume = 0.3; // Volumen moderado para música de fondo
+                    audio.loop = true; // La melodía debe repetirse
+                } else {
+                    audio.volume = 0.1; // Volumen bajo para efectos de sonido
+                }
                 audio.preload = 'auto';
                 
                 this.audioPool[soundName].push(audio);
@@ -459,13 +465,6 @@ class FlappyGame {
     }
     
     startGame() {
-        
-        // Configurar música de fondo
-        if (this.sounds.cancion) {
-            this.sounds.cancion.loop = true;
-            this.sounds.cancion.play().catch(() => {});
-        }
-        
         // Para iOS, asegurar que el canvas esté correctamente inicializado
         this.forceCanvasRedraw();
         
@@ -603,6 +602,7 @@ class FlappyGame {
     
     async gameOver() {
         this.stopBackgroundVideo(); // Pausar el video cuando termine el juego
+        this.stopBackgroundMusic(); // Pausar la melodía cuando termine el juego
         this.playSound('lose');
         this.lastScore = this.score;
         
@@ -683,6 +683,7 @@ class FlappyGame {
                     this.state = 'menu';
                     this.fetchLeaderboard();
                     this.stopBackgroundVideo();
+                    this.stopBackgroundMusic(); // Asegurar que la melodía esté pausada
                 } else {
                     this.showNameInput();
                 }
@@ -722,6 +723,7 @@ class FlappyGame {
                     this.resetGame();
                     this.state = 'jugando';
                     this.startBackgroundVideo(); // Iniciar video solo cuando empiece a jugar
+                    this.startBackgroundMusic(); // Iniciar melodía cuando empiece a jugar
                     break;
                 }
             }
@@ -752,6 +754,7 @@ class FlappyGame {
             if (this.isPointInButton(x, y, xogarButton.x, xogarButton.y, xogarButton.width, xogarButton.height)) {
                 this.state = 'menu';
                 this.stopBackgroundVideo();
+                this.stopBackgroundMusic(); // Asegurar que la melodía esté pausada
             }
             // Botón Ver Ranking (solo si está registrado)
             else if (this.player.isRegistered && this.isPointInButton(x, y, rankingButton.x, rankingButton.y, rankingButton.width, rankingButton.height)) {
@@ -858,18 +861,13 @@ class FlappyGame {
     
     startBackgroundVideo() {
         if (this.backgroundVideo && this.videoLoaded) {
-            // Activar el sonido del video cuando el usuario interactúa
-            this.backgroundVideo.muted = false;
-            this.backgroundVideo.volume = 0.3; // Volumen moderado
+            // Mantener el video siempre sin sonido - usamos melodia.mp3 en su lugar
+            this.backgroundVideo.muted = true;
             
             const playPromise = this.backgroundVideo.play();
             if (playPromise !== undefined) {
                 playPromise.catch(() => {
-                    // Si falla con sonido, intentar sin sonido
-                    this.backgroundVideo.muted = true;
-                    this.backgroundVideo.play().catch(() => {
-                        console.log('No se pudo reproducir el video de fondo');
-                    });
+                    console.log('No se pudo reproducir el video de fondo');
                 });
             }
         }
@@ -878,6 +876,24 @@ class FlappyGame {
     stopBackgroundVideo() {
         if (this.backgroundVideo) {
             this.backgroundVideo.pause();
+        }
+    }
+    
+    startBackgroundMusic() {
+        if (this.sounds.melodia) {
+            this.sounds.melodia.currentTime = 0;
+            const playPromise = this.sounds.melodia.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                    console.log('No se pudo reproducir la melodía de fondo');
+                });
+            }
+        }
+    }
+    
+    stopBackgroundMusic() {
+        if (this.sounds.melodia) {
+            this.sounds.melodia.pause();
         }
     }
     
@@ -1018,6 +1034,7 @@ class FlappyGame {
                 this.state = 'menu';
                 this.fetchLeaderboard(); // Cargar ranking después del registro
                 this.stopBackgroundVideo(); // Pausar video al ir al menú
+                this.stopBackgroundMusic(); // Asegurar que la melodía esté pausada
             } else {
                 console.error('❌ Error registering player:', result.error);
             }
@@ -1385,6 +1402,7 @@ class FlappyGame {
                     this.state = 'menu';
                     this.fetchLeaderboard();
                     this.stopBackgroundVideo();
+                    this.stopBackgroundMusic(); // Asegurar que la melodía esté pausada
                 } else {
                     alert('Erro ao rexistrar: ' + result.error);
                     this.confirmNameBtn.textContent = 'Confirmar';
