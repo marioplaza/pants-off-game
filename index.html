@@ -30,26 +30,19 @@
             background-color: #34495e;
             border-radius: 10px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 3px solid #ecf0f1;
         }
         
         #game-container {
-            /* Borde en el contenedor del juego para que coincida con el canvas */
-            border: 3px solid #ecf0f1;
-            border-radius: 5px;
-            display: block;
-            background-color: #87ceeb;
-            /* Mantener relación 2:3 y escalar al viewport */
-            aspect-ratio: 2 / 3;
-            width: 100%;
-            max-width: min(95vw, 800px);
-            height: auto;
-            max-height: 90vh;
+            /* El tamaño lo define Phaser; este contenedor se ajusta al canvas */
+            position: relative;
+            display: inline-block;
+            background-color: transparent;
         }
 
-        /* Asegurar que el canvas de Phaser rellene el contenedor exactamente */
+        /* El canvas será dimensionado por Phaser ScaleManager; evitar márgenes de auto-center */
         #game-container > canvas {
-            width: 100% !important;
-            height: 100% !important;
+            margin: 0 !important;
             display: block;
         }
         

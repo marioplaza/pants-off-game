@@ -50,10 +50,13 @@ export class MainMenuScene extends Phaser.Scene {
 
     create() {
         console.log('MainMenuScene: Creando menú principal...');
+        this.cameras.main.roundPixels = true;
         
         // Fondo principal adaptado al tamaño lógico
-        const bg = this.add.image(this.scale.width / 2, this.scale.height / 2, 'fondo');
-        bg.setDisplaySize(this.scale.width, this.scale.height);
+        const bleed = 2; // expandir 1-2px para cubrir posibles gaps por DPR
+        const bg = this.add.image(-bleed, -bleed, 'fondo');
+        bg.setOrigin(0, 0);
+        bg.setDisplaySize(Math.ceil(this.scale.width) + bleed * 2, Math.ceil(this.scale.height) + bleed * 2);
         this.backgroundImage = bg;
 
         // Reajustar en cambios de tamaño
@@ -62,8 +65,9 @@ export class MainMenuScene extends Phaser.Scene {
             const height = gameSize.height;
             this.cameras.resize(width, height);
             if (this.backgroundImage) {
-                this.backgroundImage.setPosition(width / 2, height / 2);
-                this.backgroundImage.setDisplaySize(width, height);
+                const bleed = 2;
+                this.backgroundImage.setPosition(-bleed, -bleed);
+                this.backgroundImage.setDisplaySize(Math.ceil(width) + bleed * 2, Math.ceil(height) + bleed * 2);
             }
         });
         

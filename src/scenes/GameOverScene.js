@@ -15,9 +15,11 @@ export class GameOverScene extends Phaser.Scene {
     create() {
         console.log('GameOverScene: Creando pantalla de Game Over...');
         
-        // Fondo de la pantalla de fin (como en el original)
-        const background = this.add.image(200, 300, 'xogardenovo');
-        background.setDisplaySize(400, 600);
+        // Fondo de la pantalla de fin adaptado con bleed
+        const bleed = 2;
+        const background = this.add.image(-bleed, -bleed, 'xogardenovo');
+        background.setOrigin(0, 0);
+        background.setDisplaySize(Math.ceil(this.scale.width) + bleed * 2, Math.ceil(this.scale.height) + bleed * 2);
         
         // Mostrar puntuación final (posición como en el original Y = 0.52 * 600 = 312)
         this.add.text(200, 312, `Puntuación: ${this.finalScore}`, {
@@ -68,6 +70,16 @@ export class GameOverScene extends Phaser.Scene {
             button.on('pointerout', () => {
                 button.setScale(1.0);
             });
+        });
+
+        // Manejar resize
+        this.scale.on('resize', (gameSize) => {
+            const width = gameSize.width;
+            const height = gameSize.height;
+            this.cameras.resize(width, height);
+            const bleed = 2;
+            background.setPosition(-bleed, -bleed);
+            background.setDisplaySize(Math.ceil(width) + bleed * 2, Math.ceil(height) + bleed * 2);
         });
     }
     

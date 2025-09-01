@@ -18,9 +18,11 @@ export class CharacterSelectScene extends Phaser.Scene {
         this.playerManager = new PlayerManager();
         this.apiService = new ApiService();
         
-        // Fondo de la pantalla de selección adaptado
-        const background = this.add.image(this.scale.width / 2, this.scale.height / 2, 'elixeoteupersonaxe');
-        background.setDisplaySize(this.scale.width, this.scale.height);
+        // Fondo de la pantalla de selección adaptado con bleed
+        const bleed = 2;
+        const background = this.add.image(-bleed, -bleed, 'elixeoteupersonaxe');
+        background.setOrigin(0, 0);
+        background.setDisplaySize(Math.ceil(this.scale.width) + bleed * 2, Math.ceil(this.scale.height) + bleed * 2);
         this.backgroundImage = background;
 
         // Reajustar en resize
@@ -29,8 +31,9 @@ export class CharacterSelectScene extends Phaser.Scene {
             const height = gameSize.height;
             this.cameras.resize(width, height);
             if (this.backgroundImage) {
-                this.backgroundImage.setPosition(width / 2, height / 2);
-                this.backgroundImage.setDisplaySize(width, height);
+                const bleed = 2;
+                this.backgroundImage.setPosition(-bleed, -bleed);
+                this.backgroundImage.setDisplaySize(Math.ceil(width) + bleed * 2, Math.ceil(height) + bleed * 2);
             }
         });
         

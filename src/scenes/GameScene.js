@@ -119,9 +119,11 @@ export class GameScene extends Phaser.Scene {
     }
     
     setupBackgroundVideo() {
-        // Crear video de fondo ajustado al tamaño lógico
-        this.backgroundVideo = this.add.video(this.scale.width / 2, this.scale.height / 2, 'background-video');
-        this.backgroundVideo.setDisplaySize(this.scale.width, this.scale.height);
+        // Crear video de fondo ajustado al tamaño lógico con bleed
+        const bleed = 2;
+        this.backgroundVideo = this.add.video(-bleed, -bleed, 'background-video');
+        this.backgroundVideo.setOrigin(0, 0);
+        this.backgroundVideo.setDisplaySize(Math.ceil(this.scale.width) + bleed * 2, Math.ceil(this.scale.height) + bleed * 2);
         this.backgroundVideo.setLoop(true);
         this.backgroundVideo.setMute(true); // Sin sonido
         this.backgroundVideo.play();
@@ -136,8 +138,9 @@ export class GameScene extends Phaser.Scene {
         const width = gameSize.width;
         const height = gameSize.height;
         if (this.backgroundVideo) {
-            this.backgroundVideo.setPosition(width / 2, height / 2);
-            this.backgroundVideo.setDisplaySize(width, height);
+            const bleed = 2;
+            this.backgroundVideo.setPosition(-bleed, -bleed);
+            this.backgroundVideo.setDisplaySize(Math.ceil(width) + bleed * 2, Math.ceil(height) + bleed * 2);
         }
     }
     
