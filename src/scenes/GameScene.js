@@ -66,7 +66,7 @@ export class GameScene extends Phaser.Scene {
         // Manejar resize
         this.scale.on('resize', (gameSize) => {
             this.cameras.resize(gameSize.width, gameSize.height);
-            this.layoutBackgroundVideoContain();
+            this.layoutBackgroundVideoCover();
         });
         
         // Crear límites visuales
@@ -129,7 +129,7 @@ export class GameScene extends Phaser.Scene {
         this.backgroundVideo.setDepth(-1);
         // Ajustar tamaño/posición cuando tengamos metadatos del vídeo
         const htmlVideo = this.backgroundVideo.video || (this.backgroundVideo.getVideo && this.backgroundVideo.getVideo());
-        const applyLayout = () => this.layoutBackgroundVideoContain();
+        const applyLayout = () => this.layoutBackgroundVideoCover();
         if (htmlVideo) {
             if (htmlVideo.readyState >= 1) {
                 applyLayout();
@@ -142,7 +142,7 @@ export class GameScene extends Phaser.Scene {
         console.log('Video de fondo configurado');
     }
 
-    layoutBackgroundVideoContain() {
+    layoutBackgroundVideoCover() {
         if (!this.backgroundVideo) return;
         const width = this.scale.width;
         const height = this.scale.height;
@@ -153,11 +153,12 @@ export class GameScene extends Phaser.Scene {
             videoWidth = htmlVideo.videoWidth;
             videoHeight = htmlVideo.videoHeight;
         }
-        const scale = Math.min(width / videoWidth, height / videoHeight);
-        const displayWidth = Math.ceil(videoWidth * scale);
-        const displayHeight = Math.ceil(videoHeight * scale);
-        const posX = Math.floor((width - displayWidth) / 2);
-        const posY = Math.floor((height - displayHeight) / 2);
+        const scale = Math.max(width / videoWidth, height / videoHeight);
+        const bleed = 2;
+        const displayWidth = Math.ceil(videoWidth * scale) + bleed * 2;
+        const displayHeight = Math.ceil(videoHeight * scale) + bleed * 2;
+        const posX = Math.floor((width - displayWidth) / 2) - bleed;
+        const posY = Math.floor((height - displayHeight) / 2) - bleed;
         this.backgroundVideo.setPosition(posX, posY);
         this.backgroundVideo.setDisplaySize(displayWidth, displayHeight);
     }

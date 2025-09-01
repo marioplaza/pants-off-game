@@ -34,17 +34,19 @@
         }
         
         #game-container {
-            /* El tamaño lo define Phaser; este contenedor se ajusta al canvas */
+            /* Contenedor responsive que expande el canvas manteniendo 2:3 */
             position: relative;
-            display: inline-block;
+            display: block;
+            aspect-ratio: 2 / 3;
+            width: 100%;
+            max-width: min(95vw, 800px);
+            height: auto;
+            max-height: 90vh;
             background-color: transparent;
         }
 
-        /* El canvas será dimensionado por Phaser ScaleManager; evitar márgenes de auto-center */
-        #game-container > canvas {
-            margin: 0 !important;
-            display: block;
-        }
+        /* Evitar márgenes del canvas */
+        #game-container > canvas { margin: 0 !important; display: block; }
         
         .instructions {
             color: #ecf0f1;
