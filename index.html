@@ -29,11 +29,11 @@
             position: relative;
             background-color: #34495e;
             border-radius: 10px;
-            padding: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
         
         #game-container {
+            /* Borde en el contenedor del juego para que coincida con el canvas */
             border: 3px solid #ecf0f1;
             border-radius: 5px;
             display: block;
@@ -44,6 +44,13 @@
             max-width: min(95vw, 800px);
             height: auto;
             max-height: 90vh;
+        }
+
+        /* Asegurar que el canvas de Phaser rellene el contenedor exactamente */
+        #game-container > canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
         }
         
         .instructions {

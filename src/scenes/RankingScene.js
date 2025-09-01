@@ -23,9 +23,21 @@ export class RankingScene extends Phaser.Scene {
     create() {
         console.log('RankingScene: Creando pantalla de ranking...');
         
-        // Fondo específico para ranking
-        const background = this.add.image(200, 300, 'fondo_ranking');
-        background.setDisplaySize(400, 600);
+        // Fondo específico para ranking adaptado
+        const background = this.add.image(this.scale.width / 2, this.scale.height / 2, 'fondo_ranking');
+        background.setDisplaySize(this.scale.width, this.scale.height);
+        this.backgroundImage = background;
+
+        // Reajustar en resize
+        this.scale.on('resize', (gameSize) => {
+            const width = gameSize.width;
+            const height = gameSize.height;
+            this.cameras.resize(width, height);
+            if (this.backgroundImage) {
+                this.backgroundImage.setPosition(width / 2, height / 2);
+                this.backgroundImage.setDisplaySize(width, height);
+            }
+        });
         
         // Botón volver - centrado abajo como en el original
         const backButton = this.add.text(200, 530, 'VOLTAR', {

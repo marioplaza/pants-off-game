@@ -18,9 +18,21 @@ export class CharacterSelectScene extends Phaser.Scene {
         this.playerManager = new PlayerManager();
         this.apiService = new ApiService();
         
-        // Fondo de la pantalla de selección - la imagen completa
-        const background = this.add.image(200, 300, 'elixeoteupersonaxe');
-        background.setDisplaySize(400, 600); // Llenar toda la pantalla
+        // Fondo de la pantalla de selección adaptado
+        const background = this.add.image(this.scale.width / 2, this.scale.height / 2, 'elixeoteupersonaxe');
+        background.setDisplaySize(this.scale.width, this.scale.height);
+        this.backgroundImage = background;
+
+        // Reajustar en resize
+        this.scale.on('resize', (gameSize) => {
+            const width = gameSize.width;
+            const height = gameSize.height;
+            this.cameras.resize(width, height);
+            if (this.backgroundImage) {
+                this.backgroundImage.setPosition(width / 2, height / 2);
+                this.backgroundImage.setDisplaySize(width, height);
+            }
+        });
         
         // Crear selección de personajes
         this.createCharacterSelection();

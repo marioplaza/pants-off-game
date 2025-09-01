@@ -51,8 +51,21 @@ export class MainMenuScene extends Phaser.Scene {
     create() {
         console.log('MainMenuScene: Creando menú principal...');
         
-        // Fondo principal
-        this.add.image(200, 300, 'fondo').setDisplaySize(400, 600);
+        // Fondo principal adaptado al tamaño lógico
+        const bg = this.add.image(this.scale.width / 2, this.scale.height / 2, 'fondo');
+        bg.setDisplaySize(this.scale.width, this.scale.height);
+        this.backgroundImage = bg;
+
+        // Reajustar en cambios de tamaño
+        this.scale.on('resize', (gameSize) => {
+            const width = gameSize.width;
+            const height = gameSize.height;
+            this.cameras.resize(width, height);
+            if (this.backgroundImage) {
+                this.backgroundImage.setPosition(width / 2, height / 2);
+                this.backgroundImage.setDisplaySize(width, height);
+            }
+        });
         
         
         // Botón XOGAR (Jugar) - Tamaño original del juego

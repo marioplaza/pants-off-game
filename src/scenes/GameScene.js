@@ -63,6 +63,11 @@ export class GameScene extends Phaser.Scene {
         
         // Configurar video de fondo
         this.setupBackgroundVideo();
+        // Manejar resize
+        this.scale.on('resize', (gameSize) => {
+            this.cameras.resize(gameSize.width, gameSize.height);
+            this.resizeBackgroundToScale(gameSize);
+        });
         
         // Crear límites visuales
         this.createBoundaries();
@@ -114,9 +119,9 @@ export class GameScene extends Phaser.Scene {
     }
     
     setupBackgroundVideo() {
-        // Crear video de fondo
-        this.backgroundVideo = this.add.video(200, 300, 'background-video');
-        this.backgroundVideo.setDisplaySize(400, 600);
+        // Crear video de fondo ajustado al tamaño lógico
+        this.backgroundVideo = this.add.video(this.scale.width / 2, this.scale.height / 2, 'background-video');
+        this.backgroundVideo.setDisplaySize(this.scale.width, this.scale.height);
         this.backgroundVideo.setLoop(true);
         this.backgroundVideo.setMute(true); // Sin sonido
         this.backgroundVideo.play();
@@ -125,6 +130,15 @@ export class GameScene extends Phaser.Scene {
         this.backgroundVideo.setDepth(-1);
         
         console.log('Video de fondo configurado');
+    }
+
+    resizeBackgroundToScale(gameSize) {
+        const width = gameSize.width;
+        const height = gameSize.height;
+        if (this.backgroundVideo) {
+            this.backgroundVideo.setPosition(width / 2, height / 2);
+            this.backgroundVideo.setDisplaySize(width, height);
+        }
     }
     
     createBoundaries() {
