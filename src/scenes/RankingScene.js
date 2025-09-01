@@ -82,35 +82,43 @@ export class RankingScene extends Phaser.Scene {
         this.loadingText.destroy();
         
         const { leaderboard, playerRank, totalPlayers } = data;
+        const currentPlayerId = this.playerManager.getPlayerId();
         
-        // Lista de top jugadores
-        const startY = 140;
+        // Lista de top jugadores - ajustada para encajar mejor en el fondo
+        const startY = 160; // Bajado un poco más
         for (let i = 0; i < Math.min(5, leaderboard.length); i++) {
             const player = leaderboard[i];
-            const y = startY + (i * 35);
+            const y = startY + (i * 30); // Menos espaciado vertical
+            const isCurrentPlayer = player.playerId === currentPlayerId;
             
-            // Posición
-            this.add.text(50, y, `#${player.rank}`, {
-                fontSize: '16px',
-                fill: '#ffffff',
+            // Color del jugador actual
+            const nameColor = isCurrentPlayer ? '#00ff00' : '#ffffff';
+            const rankColor = isCurrentPlayer ? '#00ff00' : '#ffffff';
+            
+            // Posición - más centrado
+            this.add.text(70, y, `#${player.rank}`, {
+                fontSize: '14px',
+                fill: rankColor,
                 stroke: '#000000',
                 strokeThickness: 1,
                 fontFamily: 'PixelDigivolve, monospace',
                 fontStyle: 'bold'
             });
             
-            // Nombre
-            this.add.text(100, y, player.name, {
-                fontSize: '16px',
-                fill: '#ffffff',
+            // Nombre - más compacto y centrado
+            const nameText = player.name.length > 10 ? player.name.substring(0, 10) : player.name;
+            this.add.text(120, y, nameText, {
+                fontSize: '14px',
+                fill: nameColor,
                 stroke: '#000000',
                 strokeThickness: 1,
-                fontFamily: 'PixelDigivolve, monospace'
+                fontFamily: 'PixelDigivolve, monospace',
+                fontStyle: isCurrentPlayer ? 'bold' : 'normal'
             });
             
-            // Puntuación
-            this.add.text(320, y, player.score.toString(), {
-                fontSize: '16px',
+            // Puntuación - ajustada
+            this.add.text(300, y, player.score.toString(), {
+                fontSize: '14px',
                 fill: '#00ff00',
                 stroke: '#000000',
                 strokeThickness: 1,
@@ -121,10 +129,10 @@ export class RankingScene extends Phaser.Scene {
         
         // Posición del jugador (si está registrado y no está en el top 5)
         if (playerRank && playerRank.rank > 5) {
-            const playerY = startY + 200;
+            const playerY = startY + 180; // Ajustado para mejor posición
             
-            this.add.text(200, playerY - 20, '➡️ TU POSICIÓN:', {
-                fontSize: '16px',
+            this.add.text(200, playerY - 15, '➡️ TU POSICIÓN:', {
+                fontSize: '14px',
                 fill: '#ffff00',
                 stroke: '#000000',
                 strokeThickness: 1,
@@ -132,9 +140,9 @@ export class RankingScene extends Phaser.Scene {
                 fontStyle: 'bold'
             }).setOrigin(0.5);
             
-            this.add.text(200, playerY, `#${playerRank.rank} de ${totalPlayers}`, {
-                fontSize: '18px',
-                fill: '#ffffff',
+            this.add.text(200, playerY + 10, `#${playerRank.rank} de ${totalPlayers}`, {
+                fontSize: '16px',
+                fill: '#00ff00',
                 stroke: '#000000',
                 strokeThickness: 2,
                 fontFamily: 'PixelDigivolve, monospace',
