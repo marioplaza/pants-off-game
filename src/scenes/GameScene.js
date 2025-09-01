@@ -66,7 +66,7 @@ export class GameScene extends Phaser.Scene {
         // Manejar resize
         this.scale.on('resize', (gameSize) => {
             this.cameras.resize(gameSize.width, gameSize.height);
-            this.resizeBackgroundToScale(gameSize);
+            this.layoutBackgroundVideoContain();
         });
         
         // Crear límites visuales
@@ -119,29 +119,47 @@ export class GameScene extends Phaser.Scene {
     }
     
     setupBackgroundVideo() {
-        // Crear video de fondo ajustado al tamaño lógico con bleed
-        const bleed = 2;
-        this.backgroundVideo = this.add.video(-bleed, -bleed, 'background-video');
+        // Crear video de fondo y configurar reproducción
+        this.backgroundVideo = this.add.video(0, 0, 'background-video');
         this.backgroundVideo.setOrigin(0, 0);
-        this.backgroundVideo.setDisplaySize(Math.ceil(this.scale.width) + bleed * 2, Math.ceil(this.scale.height) + bleed * 2);
         this.backgroundVideo.setLoop(true);
         this.backgroundVideo.setMute(true); // Sin sonido
         this.backgroundVideo.play();
-        
         // Asegurar que esté en el fondo
         this.backgroundVideo.setDepth(-1);
-        
+        // Ajustar tamaño/posición cuando tengamos metadatos del vídeo
+        const htmlVideo = this.backgroundVideo.video || (this.backgroundVideo.getVideo && this.backgroundVideo.getVideo());
+        const applyLayout = () => this.layoutBackgroundVideoContain();
+        if (htmlVideo) {
+            if (htmlVideo.readyState >= 1) {
+                applyLayout();
+            } else {
+                htmlVideo.addEventListener('loadedmetadata', applyLayout, { once: true });
+            }
+        } else {
+            this.time.delayedCall(50, applyLayout);
+        }
         console.log('Video de fondo configurado');
     }
 
-    resizeBackgroundToScale(gameSize) {
-        const width = gameSize.width;
-        const height = gameSize.height;
-        if (this.backgroundVideo) {
-            const bleed = 2;
-            this.backgroundVideo.setPosition(-bleed, -bleed);
-            this.backgroundVideo.setDisplaySize(Math.ceil(width) + bleed * 2, Math.ceil(height) + bleed * 2);
+    layoutBackgroundVideoContain() {
+        if (!this.backgroundVideo) return;
+        const width = this.scale.width;
+        const height = this.scale.height;
+        const htmlVideo = this.backgroundVideo.video || (this.backgroundVideo.getVideo && this.backgroundVideo.getVideo());
+        let videoWidth = 400;
+        let videoHeight = 600;
+        if (htmlVideo && htmlVideo.videoWidth && htmlVideo.videoHeight) {
+            videoWidth = htmlVideo.videoWidth;
+            videoHeight = htmlVideo.videoHeight;
         }
+        const scale = Math.min(width / videoWidth, height / videoHeight);
+        const displayWidth = Math.ceil(videoWidth * scale);
+        const displayHeight = Math.ceil(videoHeight * scale);
+        const posX = Math.floor((width - displayWidth) / 2);
+        const posY = Math.floor((height - displayHeight) / 2);
+        this.backgroundVideo.setPosition(posX, posY);
+        this.backgroundVideo.setDisplaySize(displayWidth, displayHeight);
     }
     
     createBoundaries() {
