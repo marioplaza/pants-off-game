@@ -38,8 +38,12 @@
             border-radius: 5px;
             display: block;
             background-color: #87ceeb;
-            width: 400px;
-            height: 600px;
+            /* Mantener relación 2:3 y escalar al viewport */
+            aspect-ratio: 2 / 3;
+            width: 100%;
+            max-width: min(95vw, 800px);
+            height: auto;
+            max-height: 90vh;
         }
         
         .instructions {
