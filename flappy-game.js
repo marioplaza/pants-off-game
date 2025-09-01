@@ -18,7 +18,16 @@ class FlappyGame {
             // Cada cuántos puntos aumenta la gravedad
             GRAVITY_INCREASE_EVERY: 25,
             // Cuánto aumenta la gravedad cada vez
-            GRAVITY_INCREASE_AMOUNT: 0.05
+            GRAVITY_INCREASE_AMOUNT: 0.05,
+            
+            // Espacio inicial entre barras (más fácil al principio)
+            INITIAL_PIPE_GAP: 290,
+            // Cada cuántos puntos se reduce el espacio
+            GAP_DECREASE_EVERY: 15,
+            // Cuánto se reduce el espacio cada vez
+            GAP_DECREASE_AMOUNT: 5,
+            // Mínimo espacio entre barras (no imposible)
+            MINIMUM_PIPE_GAP: 200
         };
         
         // Configuración básica
@@ -70,7 +79,7 @@ class FlappyGame {
         
         this.pipes = [];
         this.pipeWidth = 60;
-        this.pipeGap = 270;
+        this.pipeGap = this.DIFFICULTY_CONFIG.INITIAL_PIPE_GAP;
         this.pipeSpeed = this.DIFFICULTY_CONFIG.INITIAL_PIPE_SPEED;
         
         this.backgroundX = 0;
@@ -625,6 +634,13 @@ class FlappyGame {
         const gravityIncreases = Math.floor(this.score / this.DIFFICULTY_CONFIG.GRAVITY_INCREASE_EVERY);
         this.gravity = this.DIFFICULTY_CONFIG.INITIAL_GRAVITY + 
                       (gravityIncreases * this.DIFFICULTY_CONFIG.GRAVITY_INCREASE_AMOUNT);
+        
+        // Calcular nuevo espacio entre barras basado en puntuación
+        const gapDecreases = Math.floor(this.score / this.DIFFICULTY_CONFIG.GAP_DECREASE_EVERY);
+        this.pipeGap = Math.max(
+            this.DIFFICULTY_CONFIG.MINIMUM_PIPE_GAP,
+            this.DIFFICULTY_CONFIG.INITIAL_PIPE_GAP - (gapDecreases * this.DIFFICULTY_CONFIG.GAP_DECREASE_AMOUNT)
+        );
     }
     
     resetGame() {
@@ -638,6 +654,7 @@ class FlappyGame {
         // Resetear dificultad a valores iniciales
         this.gravity = this.DIFFICULTY_CONFIG.INITIAL_GRAVITY;
         this.pipeSpeed = this.DIFFICULTY_CONFIG.INITIAL_PIPE_SPEED;
+        this.pipeGap = this.DIFFICULTY_CONFIG.INITIAL_PIPE_GAP;
     }
     
     handleClick(x, y) {
