@@ -161,6 +161,13 @@ export class CharacterSelectScene extends Phaser.Scene {
     showNameInputModal() {
         console.log('📝 Mostrando modal de registro de nombre');
         
+        // PRIMERO: Limpiar cualquier modal existente para evitar duplicados
+        const existingModal = document.getElementById('name-input-container');
+        if (existingModal) {
+            console.log('🧹 Limpiando modal existente...');
+            existingModal.remove();
+        }
+        
         // Crear modal HTML (igual que el original)
         const modalHTML = `
             <div id="name-input-container" style="display: block; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: transparent; padding: 30px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1); text-align: center; font-family: 'PixelDigivolve', 'Courier New', monospace; backdrop-filter: blur(10px);">

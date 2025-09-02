@@ -25,6 +25,13 @@ export class GameScene extends Phaser.Scene {
     create() {
         console.log('GameScene: Creando juego...');
         
+        // Limpiar cualquier modal residual del DOM como medida de seguridad
+        const existingModal = document.getElementById('name-input-container');
+        if (existingModal) {
+            console.log('🧹 GameScene: Limpiando modal residual...');
+            existingModal.remove();
+        }
+        
         // ===== CONFIGURACIÓN DE DIFICULTAD PROGRESIVA =====
         this.DIFFICULTY_CONFIG = {
             // Velocidad inicial de tubos
