@@ -54,6 +54,8 @@ export class GameOverScene extends Phaser.Scene {
         spotifyButton.setInteractive({ useHandCursor: true });
         spotifyButton.on('pointerdown', () => {
             this.sound.play('select', { volume: 0.3 });
+            // Resetear la escala antes de abrir Spotify para evitar que se quede agrandado
+            spotifyButton.setScale(1.0);
             this.openSpotify();
         });
         

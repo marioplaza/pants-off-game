@@ -96,6 +96,10 @@ export class MainMenuScene extends Phaser.Scene {
         spotifyButton.setInteractive({ useHandCursor: true });
         spotifyButton.on('pointerdown', () => {
             this.sound.play('select', { volume: 0.3 });
+            // Resetear la escala antes de abrir Spotify para evitar que se quede agrandado
+            const originalWidth = spotifyButton.displayWidth / 1.1; // Dividir por 1.1 para obtener el tamaño original
+            const originalHeight = spotifyButton.displayHeight / 1.1;
+            spotifyButton.setDisplaySize(originalWidth, originalHeight);
             this.openSpotify();
         });
         
