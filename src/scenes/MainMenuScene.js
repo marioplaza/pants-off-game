@@ -147,19 +147,31 @@ export class MainMenuScene extends Phaser.Scene {
     }
     
     openSpotify() {
-        console.log('MainMenuScene: Abriendo Spotify en nueva pestaña...');
+        console.log('MainMenuScene: Intentando abrir Spotify (app primero, web como fallback)...');
         
-        // Crear enlace invisible para forzar apertura en nueva pestaña
-        const link = document.createElement('a');
-        link.href = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82';
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
+        const artistId = '4fgMYzpV29Kq2DpFcO0p82';
+        const spotifyAppUrl = `spotify:artist:${artistId}`;
+        const spotifyWebUrl = `https://open.spotify.com/intl-es/artist/${artistId}`;
         
-        // Añadir al DOM, hacer clic y eliminar
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Intentar abrir la app de Spotify primero
+        const appLink = document.createElement('a');
+        appLink.href = spotifyAppUrl;
+        document.body.appendChild(appLink);
+        appLink.click();
+        document.body.removeChild(appLink);
         
-        console.log('MainMenuScene: Enlace de Spotify creado y ejecutado');
+        console.log('MainMenuScene: Intento de apertura de app ejecutado');
+        
+        // Fallback a web después de 1 segundo si la app no se abre
+        setTimeout(() => {
+            console.log('MainMenuScene: Ejecutando fallback a web...');
+            const webLink = document.createElement('a');
+            webLink.href = spotifyWebUrl;
+            webLink.target = '_blank';
+            webLink.rel = 'noopener noreferrer';
+            document.body.appendChild(webLink);
+            webLink.click();
+            document.body.removeChild(webLink);
+        }, 1000);
     }
 }
