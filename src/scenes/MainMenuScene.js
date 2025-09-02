@@ -147,17 +147,19 @@ export class MainMenuScene extends Phaser.Scene {
     }
     
     openSpotify() {
-        console.log('MainMenuScene: Abriendo Spotify...');
+        console.log('MainMenuScene: Abriendo Spotify en nueva pestaña...');
         
-        const spotifyWebUrl = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82';
+        // Crear enlace invisible para forzar apertura en nueva pestaña
+        const link = document.createElement('a');
+        link.href = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
         
-        try {
-            const newWindow = window.open(spotifyWebUrl, '_blank', 'noopener,noreferrer');
-            if (!newWindow) {
-                window.location.href = spotifyWebUrl;
-            }
-        } catch (error) {
-            window.location.href = spotifyWebUrl;
-        }
+        // Añadir al DOM, hacer clic y eliminar
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('MainMenuScene: Enlace de Spotify creado y ejecutado');
     }
 }

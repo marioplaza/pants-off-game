@@ -84,16 +84,20 @@ export class GameOverScene extends Phaser.Scene {
     }
     
     openSpotify() {
-        const spotifyWebUrl = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82';
+        console.log('GameOverScene: Abriendo Spotify en nueva pestaña...');
         
-        try {
-            const newWindow = window.open(spotifyWebUrl, '_blank', 'noopener,noreferrer');
-            if (!newWindow) {
-                window.location.href = spotifyWebUrl;
-            }
-        } catch (error) {
-            window.location.href = spotifyWebUrl;
-        }
+        // Crear enlace invisible para forzar apertura en nueva pestaña
+        const link = document.createElement('a');
+        link.href = 'https://open.spotify.com/intl-es/artist/4fgMYzpV29Kq2DpFcO0p82';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        
+        // Añadir al DOM, hacer clic y eliminar
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('GameOverScene: Enlace de Spotify creado y ejecutado');
     }
     
 
