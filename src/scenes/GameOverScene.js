@@ -52,30 +52,22 @@ export class GameOverScene extends Phaser.Scene {
         const spotifyButton = this.add.image(200, 516, 'escoitanos2');
         spotifyButton.setDisplaySize(200, spotifyButton.height * (200 / spotifyButton.width));
         spotifyButton.setInteractive({ useHandCursor: true });
-        // Efectos hover en todos los botones - Usar la misma estrategia que MainMenuScene
-        [playAgainButton, rankingButton, spotifyButton].forEach(button => {
-            // Guardar escala original en el botón para uso posterior
-            button.originalScale = 1.0;
-            
+        // Efectos hover solo en botones que no causan problemas de foco
+        [playAgainButton, rankingButton].forEach(button => {
             button.on('pointerover', () => {
                 button.setScale(1.1);
             });
             button.on('pointerout', () => {
-                button.setScale(button.originalScale);
+                button.setScale(1.0);
             });
         });
         
+        // Spotify button sin hover para evitar problemas al cambiar de ventana
+        spotifyButton.originalScale = 1.0;
+        
         spotifyButton.on('pointerdown', () => {
             this.sound.play('select', { volume: 0.3 });
-            // Resetear a la escala original antes de abrir Spotify
-            console.log('🎵 GameOver Spotify click - Escala antes:', spotifyButton.scaleX);
-            spotifyButton.setScale(spotifyButton.originalScale);
-            console.log('🎵 GameOver Spotify click - Escala después:', spotifyButton.scaleX);
-            
-            // Forzar un breve delay para asegurar que el reset se aplique
-            this.time.delayedCall(50, () => {
-                this.openSpotify();
-            });
+            this.openSpotify();
         });
 
         // Manejar resize
@@ -88,27 +80,7 @@ export class GameOverScene extends Phaser.Scene {
             background.setDisplaySize(Math.ceil(width) + bleed * 2, Math.ceil(height) + bleed * 2);
         });
         
-        // Resetear escalas de botones cuando la ventana recupera el foco
-        const resetButtonScales = () => {
-            console.log('🔄 GameOver: Reseteando escalas de botones al recuperar foco');
-            [playAgainButton, rankingButton, spotifyButton].forEach(button => {
-                if (button && button.originalScale !== undefined) {
-                    button.setScale(button.originalScale);
-                    console.log(`🔄 Botón reseteado a escala: ${button.originalScale}`);
-                }
-            });
-        };
-        
-        // Listeners para detectar cuando se vuelve a la ventana
-        this.windowFocusHandler = resetButtonScales;
-        this.visibilityChangeHandler = () => {
-            if (!document.hidden) {
-                resetButtonScales();
-            }
-        };
-        
-        window.addEventListener('focus', this.windowFocusHandler);
-        document.addEventListener('visibilitychange', this.visibilityChangeHandler);
+
     }
     
     openSpotify() {
@@ -124,23 +96,5 @@ export class GameOverScene extends Phaser.Scene {
         }
     }
     
-    shutdown() {
-        // Limpiar event listeners al salir de la escena
-        if (this.windowFocusHandler) {
-            window.removeEventListener('focus', this.windowFocusHandler);
-        }
-        if (this.visibilityChangeHandler) {
-            document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
-        }
-    }
-    
-    destroy() {
-        // Limpiar event listeners al destruir la escena
-        if (this.windowFocusHandler) {
-            window.removeEventListener('focus', this.windowFocusHandler);
-        }
-        if (this.visibilityChangeHandler) {
-            document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
-        }
-    }
+
 }
