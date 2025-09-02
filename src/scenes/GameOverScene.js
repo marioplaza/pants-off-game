@@ -68,8 +68,14 @@ export class GameOverScene extends Phaser.Scene {
         spotifyButton.on('pointerdown', () => {
             this.sound.play('select', { volume: 0.3 });
             // Resetear a la escala original antes de abrir Spotify
+            console.log('🎵 GameOver Spotify click - Escala antes:', spotifyButton.scaleX);
             spotifyButton.setScale(spotifyButton.originalScale);
-            this.openSpotify();
+            console.log('🎵 GameOver Spotify click - Escala después:', spotifyButton.scaleX);
+            
+            // Forzar un breve delay para asegurar que el reset se aplique
+            this.time.delayedCall(50, () => {
+                this.openSpotify();
+            });
         });
 
         // Manejar resize
@@ -81,6 +87,28 @@ export class GameOverScene extends Phaser.Scene {
             background.setPosition(-bleed, -bleed);
             background.setDisplaySize(Math.ceil(width) + bleed * 2, Math.ceil(height) + bleed * 2);
         });
+        
+        // Resetear escalas de botones cuando la ventana recupera el foco
+        const resetButtonScales = () => {
+            console.log('🔄 GameOver: Reseteando escalas de botones al recuperar foco');
+            [playAgainButton, rankingButton, spotifyButton].forEach(button => {
+                if (button && button.originalScale !== undefined) {
+                    button.setScale(button.originalScale);
+                    console.log(`🔄 Botón reseteado a escala: ${button.originalScale}`);
+                }
+            });
+        };
+        
+        // Listeners para detectar cuando se vuelve a la ventana
+        this.windowFocusHandler = resetButtonScales;
+        this.visibilityChangeHandler = () => {
+            if (!document.hidden) {
+                resetButtonScales();
+            }
+        };
+        
+        window.addEventListener('focus', this.windowFocusHandler);
+        document.addEventListener('visibilitychange', this.visibilityChangeHandler);
     }
     
     openSpotify() {
@@ -93,6 +121,26 @@ export class GameOverScene extends Phaser.Scene {
             }
         } catch (error) {
             window.location.href = spotifyWebUrl;
+        }
+    }
+    
+    shutdown() {
+        // Limpiar event listeners al salir de la escena
+        if (this.windowFocusHandler) {
+            window.removeEventListener('focus', this.windowFocusHandler);
+        }
+        if (this.visibilityChangeHandler) {
+            document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+        }
+    }
+    
+    destroy() {
+        // Limpiar event listeners al destruir la escena
+        if (this.windowFocusHandler) {
+            window.removeEventListener('focus', this.windowFocusHandler);
+        }
+        if (this.visibilityChangeHandler) {
+            document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
         }
     }
 }
