@@ -94,25 +94,28 @@ export class MainMenuScene extends Phaser.Scene {
         const spotifyButton = this.add.image(200, 480, 'escoitanos');
         spotifyButton.setDisplaySize(200, spotifyButton.height * (200 / spotifyButton.width)); // Ancho 200px como el original
         spotifyButton.setInteractive({ useHandCursor: true });
-        spotifyButton.on('pointerdown', () => {
-            this.sound.play('select', { volume: 0.3 });
-            // Resetear la escala antes de abrir Spotify para evitar que se quede agrandado
-            const originalWidth = spotifyButton.displayWidth / 1.1; // Dividir por 1.1 para obtener el tamaño original
-            const originalHeight = spotifyButton.displayHeight / 1.1;
-            spotifyButton.setDisplaySize(originalWidth, originalHeight);
-            this.openSpotify();
-        });
         
-        // Efectos hover en botones de imagen
+        // Efectos hover en botones de imagen - DEFINIR ANTES del pointerdown
         [playButton, spotifyButton].forEach(button => {
             const originalWidth = button.displayWidth;
             const originalHeight = button.displayHeight;
+            // Guardar dimensiones originales en el botón para uso posterior
+            button.originalWidth = originalWidth;
+            button.originalHeight = originalHeight;
+            
             button.on('pointerover', () => {
                 button.setDisplaySize(originalWidth * 1.1, originalHeight * 1.1);
             });
             button.on('pointerout', () => {
                 button.setDisplaySize(originalWidth, originalHeight);
             });
+        });
+        
+        spotifyButton.on('pointerdown', () => {
+            this.sound.play('select', { volume: 0.3 });
+            // Resetear al tamaño original antes de abrir Spotify
+            spotifyButton.setDisplaySize(spotifyButton.originalWidth, spotifyButton.originalHeight);
+            this.openSpotify();
         });
         
         // Efecto hover para botón ranking (imagen)
