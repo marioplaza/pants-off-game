@@ -68,6 +68,23 @@ export class GameScene extends Phaser.Scene {
             this.cameras.resize(gameSize.width, gameSize.height);
             this.layoutBackgroundVideoCover();
         });
+        // Reaplicar layout al recuperar foco/visibilidad (soluciona primer render)
+        this._onVisibilityChange = () => {
+            if (!document.hidden) {
+                if (this.scale && this.scale.refresh) {
+                    this.scale.refresh();
+                }
+                this.layoutBackgroundVideoCover();
+            }
+        };
+        this._onWindowFocus = () => {
+            if (this.scale && this.scale.refresh) {
+                this.scale.refresh();
+            }
+            this.layoutBackgroundVideoCover();
+        };
+        document.addEventListener('visibilitychange', this._onVisibilityChange);
+        window.addEventListener('focus', this._onWindowFocus);
         
         // Crear límites visuales
         this.createBoundaries();
@@ -139,6 +156,9 @@ export class GameScene extends Phaser.Scene {
         } else {
             this.time.delayedCall(50, applyLayout);
         }
+        // Reforzar layout tras pequeños retrasos por si el Scale FIT aún no aplicó
+        this.time.delayedCall(100, applyLayout);
+        this.time.delayedCall(300, applyLayout);
         console.log('Video de fondo configurado');
     }
 
@@ -161,6 +181,17 @@ export class GameScene extends Phaser.Scene {
         const posY = Math.floor((height - displayHeight) / 2) - bleed;
         this.backgroundVideo.setPosition(posX, posY);
         this.backgroundVideo.setDisplaySize(displayWidth, displayHeight);
+    }
+
+    shutdownVideoLayoutHandlers() {
+        if (this._onVisibilityChange) {
+            document.removeEventListener('visibilitychange', this._onVisibilityChange);
+            this._onVisibilityChange = null;
+        }
+        if (this._onWindowFocus) {
+            window.removeEventListener('focus', this._onWindowFocus);
+            this._onWindowFocus = null;
+        }
     }
     
     createBoundaries() {
@@ -669,6 +700,14 @@ export class GameScene extends Phaser.Scene {
                 apiService: this.apiService
             });
         });
+    }
+
+    shutdown() {
+        this.shutdownVideoLayoutHandlers();
+    }
+
+    destroy() {
+        this.shutdownVideoLayoutHandlers();
     }
 
 }
