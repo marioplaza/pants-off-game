@@ -52,33 +52,24 @@ export class GameOverScene extends Phaser.Scene {
         const spotifyButton = this.add.image(200, 516, 'escoitanos2');
         spotifyButton.setDisplaySize(200, spotifyButton.height * (200 / spotifyButton.width));
         spotifyButton.setInteractive({ useHandCursor: true });
-        // Efectos hover en todos los botones - DEFINIR ANTES del pointerdown
+        // Efectos hover en todos los botones - Usar la misma estrategia que MainMenuScene
         [playAgainButton, rankingButton, spotifyButton].forEach(button => {
+            // Guardar escala original en el botón para uso posterior
+            button.originalScale = 1.0;
+            
             button.on('pointerover', () => {
-                if (!button.isPressed) {
-                    button.setScale(1.1);
-                }
+                button.setScale(1.1);
             });
             button.on('pointerout', () => {
-                if (!button.isPressed) {
-                    button.setScale(1.0);
-                }
+                button.setScale(button.originalScale);
             });
         });
         
         spotifyButton.on('pointerdown', () => {
             this.sound.play('select', { volume: 0.3 });
-            // Marcar como presionado y resetear escala
-            spotifyButton.isPressed = true;
-            spotifyButton.setScale(1.0);
+            // Resetear a la escala original antes de abrir Spotify
+            spotifyButton.setScale(spotifyButton.originalScale);
             this.openSpotify();
-        });
-        
-        // Resetear flag cuando se presiona otra cosa o se vuelve de foco
-        this.input.on('pointerdown', () => {
-            [playAgainButton, rankingButton, spotifyButton].forEach(button => {
-                button.isPressed = false;
-            });
         });
 
         // Manejar resize
