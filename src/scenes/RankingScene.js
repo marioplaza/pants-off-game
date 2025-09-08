@@ -140,7 +140,7 @@ export class RankingScene extends Phaser.Scene {
         if (playerRank && playerRank.rank > 10) {
             // Calcular posición Y después del último jugador mostrado
             const lastPlayerY = startY + (Math.min(10, leaderboard.length) - 1) * 30;
-            const playerSectionY = lastPlayerY + 10; // Espacio después del último jugador
+            const playerSectionY = lastPlayerY + 30; // Espacio después del último jugador
             
             this.add.text(200, playerSectionY, '➡️ TU POSICIÓN:', {
                 fontSize: '14px',
