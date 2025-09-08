@@ -279,8 +279,9 @@ export class GameScene extends Phaser.Scene {
         this.buildings1.setScale(0.35); // Un poco más pequeños
         this.buildings1.setDepth(0); // Por encima del video pero debajo de obstáculos
         
-        // Segunda imagen para continuidad
-        this.buildings2 = this.add.image(this.buildings1.width * 0.35, 600, 'edificios');
+        // Segunda imagen pegada exactamente al final de la primera
+        const scaledWidth = this.buildings1.width * 0.35;
+        this.buildings2 = this.add.image(scaledWidth, 600, 'edificios');
         this.buildings2.setOrigin(0, 1);
         this.buildings2.setScale(0.35);
         this.buildings2.setDepth(0);
@@ -288,7 +289,7 @@ export class GameScene extends Phaser.Scene {
         // Velocidad de movimiento más lenta para efecto parallax
         this.buildingsSpeed = 2;
         
-        console.log('Fondo de edificios creado para efecto parallax (escala 0.5)');
+        console.log(`Fondo de edificios creado - Ancho escalado: ${scaledWidth}px`);
     }
     
     createBird() {
