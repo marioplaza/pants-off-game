@@ -131,7 +131,7 @@ export class GameScene extends Phaser.Scene {
         
         // Timer para generar coleccionables
         this.collectibleTimer = this.time.addEvent({
-            delay: 3000,
+            delay: 2000,
             callback: this.maybeAddCollectible,
             callbackScope: this,
             loop: true,
@@ -593,7 +593,7 @@ export class GameScene extends Phaser.Scene {
     }
     
     maybeAddCollectible() {
-        if (this.gameOver || Math.random() > 0.3) return;
+        if (this.gameOver || Math.random() > 0.4) return;
         
         // Solo crear coleccionable si hay tubos recientes para usar su hueco
         if (!this.pipeArray || this.pipeArray.length === 0) return;
