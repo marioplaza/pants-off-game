@@ -52,14 +52,23 @@ export class GameOverScene extends Phaser.Scene {
         const spotifyButton = this.add.image(200, 516, 'escoitanos2');
         spotifyButton.setDisplaySize(200, spotifyButton.height * (200 / spotifyButton.width));
         spotifyButton.setInteractive({ useHandCursor: true });
-        // Efectos hover solo en botones que no causan problemas de foco
-        [playAgainButton, rankingButton].forEach(button => {
-            button.on('pointerover', () => {
-                button.setScale(1.1);
-            });
-            button.on('pointerout', () => {
-                button.setScale(1.0);
-            });
+        // Efectos hover con displaySize como en MainMenuScene
+        const paw = playAgainButton.displayWidth;
+        const pah = playAgainButton.displayHeight;
+        playAgainButton.on('pointerover', () => {
+            playAgainButton.setDisplaySize(paw * 1.1, pah * 1.1);
+        });
+        playAgainButton.on('pointerout', () => {
+            playAgainButton.setDisplaySize(paw, pah);
+        });
+        
+        const rbw = rankingButton.displayWidth;
+        const rbh = rankingButton.displayHeight;
+        rankingButton.on('pointerover', () => {
+            rankingButton.setDisplaySize(rbw * 1.1, rbh * 1.1);
+        });
+        rankingButton.on('pointerout', () => {
+            rankingButton.setDisplaySize(rbw, rbh);
         });
         
         // Spotify button sin hover para evitar problemas al cambiar de ventana
