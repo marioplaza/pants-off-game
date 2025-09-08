@@ -148,48 +148,59 @@ export class MainMenuScene extends Phaser.Scene {
     }
     
     openSpotify() {
-        console.log('MainMenuScene: Intentando abrir Spotify (app primero, web como fallback)...');
+        console.log('MainMenuScene: Intentando abrir Spotify...');
         
         const artistId = '4fgMYzpV29Kq2DpFcO0p82';
         const spotifyAppUrl = `spotify:artist:${artistId}`;
         const spotifyWebUrl = `https://open.spotify.com/intl-es/artist/${artistId}`;
         
-        let appOpened = false;
+        // Detectar iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         
-        // Detectar si la app se abre monitoreando visibility/blur
-        const handleVisibilityChange = () => {
-            if (document.hidden) {
-                appOpened = true;
-                console.log('MainMenuScene: App detectada como abierta, cancelando fallback web');
-            }
-        };
-        
-        const handleBlur = () => {
-            appOpened = true;
-            console.log('MainMenuScene: Ventana perdió foco, app probablemente abierta');
-        };
-        
-        // Agregar listeners temporalmente
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('blur', handleBlur);
-        
-        // Intentar abrir la app de Spotify primero
-        const appLink = document.createElement('a');
-        appLink.href = spotifyAppUrl;
-        document.body.appendChild(appLink);
-        appLink.click();
-        document.body.removeChild(appLink);
-        
-        console.log('MainMenuScene: Intento de apertura de app ejecutado');
-        
-        // Fallback a web solo si la app no se abrió
-        setTimeout(() => {
-            // Limpiar listeners
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            window.removeEventListener('blur', handleBlur);
+        if (isIOS) {
+            console.log('MainMenuScene: iOS detectado - usando detección mejorada');
             
-            if (!appOpened) {
-                console.log('MainMenuScene: App no detectada, ejecutando fallback a web...');
+            let appOpened = false;
+            let fallbackTriggered = false;
+            
+            // Detectar cuando la app se abre (la página se oculta)
+            const handleVisibilityChange = () => {
+                if (document.hidden && !fallbackTriggered) {
+                    appOpened = true;
+                    console.log('MainMenuScene: App abierta, cancelando fallback');
+                }
+            };
+            
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+            
+            // Crear iframe invisible para intentar abrir la app
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = spotifyAppUrl;
+            document.body.appendChild(iframe);
+            
+            // Fallback más rápido para iOS
+            setTimeout(() => {
+                document.removeEventListener('visibilitychange', handleVisibilityChange);
+                document.body.removeChild(iframe);
+                
+                if (!appOpened && !fallbackTriggered) {
+                    fallbackTriggered = true;
+                    console.log('MainMenuScene: App no detectada, abriendo web');
+                    window.open(spotifyWebUrl, '_blank', 'noopener,noreferrer');
+                }
+            }, 800); // Más rápido en iOS
+            
+        } else {
+            // En otros dispositivos: mantener lógica anterior
+            console.log('MainMenuScene: No-iOS - usando fallback web');
+            const appLink = document.createElement('a');
+            appLink.href = spotifyAppUrl;
+            document.body.appendChild(appLink);
+            appLink.click();
+            document.body.removeChild(appLink);
+            
+            setTimeout(() => {
                 const webLink = document.createElement('a');
                 webLink.href = spotifyWebUrl;
                 webLink.target = '_blank';
@@ -197,9 +208,7 @@ export class MainMenuScene extends Phaser.Scene {
                 document.body.appendChild(webLink);
                 webLink.click();
                 document.body.removeChild(webLink);
-            } else {
-                console.log('MainMenuScene: Fallback web cancelado - app ya abierta');
-            }
-        }, 1500);
+            }, 1000);
+        }
     }
 }
