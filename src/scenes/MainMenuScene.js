@@ -158,38 +158,50 @@ export class MainMenuScene extends Phaser.Scene {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         
         if (isIOS) {
-            console.log('MainMenuScene: iOS detectado - usando detección mejorada');
+            console.log('MainMenuScene: iOS detectado - usando link directo con detección');
             
             let appOpened = false;
-            let fallbackTriggered = false;
+            const startTime = Date.now();
             
-            // Detectar cuando la app se abre (la página se oculta)
+            // Detectar cuando la app se abre
             const handleVisibilityChange = () => {
-                if (document.hidden && !fallbackTriggered) {
+                if (document.hidden) {
                     appOpened = true;
-                    console.log('MainMenuScene: App abierta, cancelando fallback');
+                    console.log('MainMenuScene: App abierta exitosamente');
+                }
+            };
+            
+            const handlePageShow = () => {
+                const timeSpent = Date.now() - startTime;
+                if (timeSpent < 2000) {
+                    // Si volvemos rápido, probablemente la app no se abrió
+                    console.log('MainMenuScene: Regreso rápido, probablemente app no disponible');
+                } else {
+                    appOpened = true;
+                    console.log('MainMenuScene: App se abrió (tiempo largo fuera)');
                 }
             };
             
             document.addEventListener('visibilitychange', handleVisibilityChange);
+            window.addEventListener('pageshow', handlePageShow);
             
-            // Crear iframe invisible para intentar abrir la app
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = spotifyAppUrl;
-            document.body.appendChild(iframe);
+            // Usar link directo como antes (para mostrar el diálogo de iOS)
+            const appLink = document.createElement('a');
+            appLink.href = spotifyAppUrl;
+            document.body.appendChild(appLink);
+            appLink.click();
+            document.body.removeChild(appLink);
             
-            // Fallback más rápido para iOS
+            // Fallback después de esperar
             setTimeout(() => {
                 document.removeEventListener('visibilitychange', handleVisibilityChange);
-                document.body.removeChild(iframe);
+                window.removeEventListener('pageshow', handlePageShow);
                 
-                if (!appOpened && !fallbackTriggered) {
-                    fallbackTriggered = true;
-                    console.log('MainMenuScene: App no detectada, abriendo web');
+                if (!appOpened) {
+                    console.log('MainMenuScene: App no se abrió, abriendo web');
                     window.open(spotifyWebUrl, '_blank', 'noopener,noreferrer');
                 }
-            }, 800); // Más rápido en iOS
+            }, 2500); // Más tiempo para que el usuario decida
             
         } else {
             // En otros dispositivos: mantener lógica anterior
