@@ -136,11 +136,13 @@ export class RankingScene extends Phaser.Scene {
             }).setOrigin(1, 0);
         }
         
-        // Posición del jugador (si está registrado y no está en el top 5)
-        if (playerRank && playerRank.rank > 5) {
-            const playerY = startY + 180; // Ajustado para mejor posición
+        // Posición del jugador (si está registrado y no está en el top 10)
+        if (playerRank && playerRank.rank > 10) {
+            // Calcular posición Y después del último jugador mostrado
+            const lastPlayerY = startY + (Math.min(10, leaderboard.length) - 1) * 30;
+            const playerSectionY = lastPlayerY + 10; // Espacio después del último jugador
             
-            this.add.text(200, playerY - 15, '➡️ TU POSICIÓN:', {
+            this.add.text(200, playerSectionY, '➡️ TU POSICIÓN:', {
                 fontSize: '14px',
                 fill: '#ffff00',
                 stroke: '#000000',
@@ -149,7 +151,7 @@ export class RankingScene extends Phaser.Scene {
                 fontStyle: 'bold'
             }).setOrigin(0.5);
             
-            this.add.text(200, playerY + 10, `#${playerRank.rank} de ${totalPlayers}`, {
+            this.add.text(200, playerSectionY + 25, `#${playerRank.rank} de ${totalPlayers}`, {
                 fontSize: '16px',
                 fill: '#00ff00',
                 stroke: '#000000',
