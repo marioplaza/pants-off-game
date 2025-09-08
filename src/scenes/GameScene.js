@@ -151,43 +151,102 @@ export class GameScene extends Phaser.Scene {
         this.backgroundVideo.play();
         // Asegurar que esté en el fondo
         this.backgroundVideo.setDepth(-1);
-        // Ajustar tamaño/posición cuando tengamos metadatos del vídeo
-        const htmlVideo = this.backgroundVideo.video || (this.backgroundVideo.getVideo && this.backgroundVideo.getVideo());
+        
+        // Aplicar layout inmediatamente con fallbacks
         const applyLayout = () => this.layoutBackgroundVideoCover();
+        
+        // Obtener referencia al elemento HTML del video
+        const htmlVideo = this.backgroundVideo.video || (this.backgroundVideo.getVideo && this.backgroundVideo.getVideo());
+        
         if (htmlVideo) {
+            // Múltiples eventos para iOS Safari
+            htmlVideo.addEventListener('loadedmetadata', applyLayout, { once: true });
+            htmlVideo.addEventListener('loadeddata', applyLayout, { once: true });
+            htmlVideo.addEventListener('canplay', applyLayout, { once: true });
+            htmlVideo.addEventListener('canplaythrough', applyLayout, { once: true });
+            
+            // Para iOS: también escuchar cuando el video realmente empiece
+            htmlVideo.addEventListener('playing', applyLayout, { once: true });
+            
+            // Si ya está listo, aplicar inmediatamente
             if (htmlVideo.readyState >= 1) {
                 applyLayout();
-            } else {
-                htmlVideo.addEventListener('loadedmetadata', applyLayout, { once: true });
             }
-        } else {
-            this.time.delayedCall(50, applyLayout);
         }
-        // Reforzar layout tras pequeños retrasos por si el Scale FIT aún no aplicó
+        
+        // Reforzar layout con más intentos y tiempos más largos para móviles
+        this.time.delayedCall(50, applyLayout);
         this.time.delayedCall(100, applyLayout);
         this.time.delayedCall(300, applyLayout);
-        console.log('Video de fondo configurado');
+        this.time.delayedCall(500, applyLayout);
+        this.time.delayedCall(1000, applyLayout);
+        this.time.delayedCall(2000, applyLayout); // Para conexiones lentas en móviles
+        
+        // También aplicar layout cuando el juego recupere el foco (común en móviles)
+        this._onGameFocus = () => {
+            this.time.delayedCall(50, applyLayout);
+            this.time.delayedCall(200, applyLayout);
+        };
+        
+        window.addEventListener('focus', this._onGameFocus);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                this._onGameFocus();
+            }
+        });
+        
+        console.log('Video de fondo configurado con mejoras para móviles');
     }
 
     layoutBackgroundVideoCover() {
         if (!this.backgroundVideo) return;
+        
         const width = this.scale.width;
         const height = this.scale.height;
         const htmlVideo = this.backgroundVideo.video || (this.backgroundVideo.getVideo && this.backgroundVideo.getVideo());
+        
         let videoWidth = 400;
         let videoHeight = 600;
-        if (htmlVideo && htmlVideo.videoWidth && htmlVideo.videoHeight) {
-            videoWidth = htmlVideo.videoWidth;
-            videoHeight = htmlVideo.videoHeight;
+        
+        // Mejorar detección de dimensiones del video para móviles
+        if (htmlVideo) {
+            // Intentar múltiples formas de obtener las dimensiones
+            if (htmlVideo.videoWidth && htmlVideo.videoHeight) {
+                videoWidth = htmlVideo.videoWidth;
+                videoHeight = htmlVideo.videoHeight;
+            } else if (htmlVideo.naturalWidth && htmlVideo.naturalHeight) {
+                videoWidth = htmlVideo.naturalWidth;
+                videoHeight = htmlVideo.naturalHeight;
+            } else if (htmlVideo.clientWidth && htmlVideo.clientHeight) {
+                videoWidth = htmlVideo.clientWidth;
+                videoHeight = htmlVideo.clientHeight;
+            }
+            
+            // Debug para iOS: mostrar qué dimensiones detectamos
+            console.log(`Video dimensions detected: ${videoWidth}x${videoHeight} (readyState: ${htmlVideo.readyState})`);
+            
+            // En iOS a veces las dimensiones son 0 inicialmente, usar fallback
+            if (videoWidth === 0 || videoHeight === 0) {
+                videoWidth = 400;
+                videoHeight = 600;
+                console.log('Using fallback dimensions for video');
+            }
         }
+        
         const scale = Math.max(width / videoWidth, height / videoHeight);
         const bleed = 2;
         const displayWidth = Math.ceil(videoWidth * scale) + bleed * 2;
         const displayHeight = Math.ceil(videoHeight * scale) + bleed * 2;
         const posX = Math.floor((width - displayWidth) / 2) - bleed;
         const posY = Math.floor((height - displayHeight) / 2) - bleed;
+        
+        // Forzar repaint en iOS Safari
+        this.backgroundVideo.setVisible(false);
         this.backgroundVideo.setPosition(posX, posY);
         this.backgroundVideo.setDisplaySize(displayWidth, displayHeight);
+        this.backgroundVideo.setVisible(true);
+        
+        console.log(`Video layout applied: ${displayWidth}x${displayHeight} at (${posX}, ${posY}), scale: ${scale}`);
     }
 
     shutdownVideoLayoutHandlers() {
@@ -198,6 +257,10 @@ export class GameScene extends Phaser.Scene {
         if (this._onWindowFocus) {
             window.removeEventListener('focus', this._onWindowFocus);
             this._onWindowFocus = null;
+        }
+        if (this._onGameFocus) {
+            window.removeEventListener('focus', this._onGameFocus);
+            this._onGameFocus = null;
         }
     }
     

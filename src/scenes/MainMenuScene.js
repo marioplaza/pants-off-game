@@ -79,6 +79,7 @@ export class MainMenuScene extends Phaser.Scene {
         playButton.on('pointerdown', () => {
             this.sound.play('select', { volume: 0.3 });
             this.scene.start('CharacterSelectScene');
+         //   this.scene.start('GameScene', { selectedCharacter: 'fonso' });
         });
         
         // Botón RANKING usando asset de imagen
