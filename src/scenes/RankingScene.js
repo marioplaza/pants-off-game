@@ -43,7 +43,7 @@ export class RankingScene extends Phaser.Scene {
         });
         
         // Botón volver - imagen centrada abajo con mismo tamaño que MainMenuScene
-        const backButton = this.add.image(200, 530, 'volver').setOrigin(0.5);
+        const backButton = this.add.image(200, 562, 'volver').setOrigin(0.5);
         backButton.setDisplaySize(200, backButton.height * (200 / backButton.width));
         backButton.setInteractive({ useHandCursor: true });
         backButton.on('pointerdown', () => {
