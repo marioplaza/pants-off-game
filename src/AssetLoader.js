@@ -34,7 +34,6 @@ export class AssetLoader {
         
         // Pájaro y elementos de juego
         scene.load.image('pajaro', '/assets/images/pajaro.webp');
-        scene.load.image('cadenas', '/assets/images/cadenas.webp');
         
         // ===================
         // FUENTES

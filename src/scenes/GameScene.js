@@ -469,10 +469,8 @@ export class GameScene extends Phaser.Scene {
         const pipeWidth = 60; // Ancho original correcto
         const pipeX = 420; // Posición X inicial
         
-        // TUBO SUPERIOR - Imagen de cadenas estirada verticalmente (SIN FÍSICA)
-        const topPipe = this.add.image(pipeX, height/2, 'cadenas');
-        topPipe.setDisplaySize(pipeWidth, height); // Estirar la imagen para que tenga la altura correcta
-        topPipe.setTint(0x00aa00); // Darle tono verdoso
+        // TUBO SUPERIOR - Rectángulo verde
+        const topPipe = this.add.rectangle(pipeX, height/2, pipeWidth, height, 0x00aa00);
         topPipe.setDepth(5); // Asegurar que se vea encima del video
         
         // Propiedades personalizadas para movimiento manual
@@ -480,12 +478,10 @@ export class GameScene extends Phaser.Scene {
         topPipe.scored = false;
         topPipe.isTopPipe = true;
         
-        // TUBO INFERIOR - Imagen de cadenas estirada verticalmente (SIN FÍSICA)
+        // TUBO INFERIOR - Rectángulo verde
         const bottomPipeY = height + this.pipeGap;
         const bottomPipeHeight = 600 - bottomPipeY;
-        const bottomPipe = this.add.image(pipeX, bottomPipeY + bottomPipeHeight/2, 'cadenas');
-        bottomPipe.setDisplaySize(pipeWidth, bottomPipeHeight); // Estirar la imagen para que tenga la altura correcta
-        bottomPipe.setTint(0x00aa00); // Darle tono verdoso
+        const bottomPipe = this.add.rectangle(pipeX, bottomPipeY + bottomPipeHeight/2, pipeWidth, bottomPipeHeight, 0x00aa00);
         bottomPipe.setDepth(5); // Asegurar que se vea encima del video
         
         // Propiedades personalizadas para movimiento manual
