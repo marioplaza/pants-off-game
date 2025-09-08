@@ -96,6 +96,9 @@ export class GameScene extends Phaser.Scene {
         // Crear límites visuales
         this.createBoundaries();
         
+        // Crear fondo de edificios (parallax)
+        this.createBuildingsBackground();
+        
         // Configurar física del mundo
         this.physics.world.gravity.y = this.currentGravity * 600; // Convertir a escala Phaser
         
@@ -269,6 +272,25 @@ export class GameScene extends Phaser.Scene {
         console.log('Sin límites visuales - detección por coordenadas');
     }
     
+    createBuildingsBackground() {
+        // Crear dos imágenes de edificios más pequeñas para efecto infinito
+        this.buildings1 = this.add.image(0, 600, 'edificios');
+        this.buildings1.setOrigin(0, 1); // Origen en esquina inferior izquierda
+        this.buildings1.setScale(0.35); // Un poco más pequeños
+        this.buildings1.setDepth(0); // Por encima del video pero debajo de obstáculos
+        
+        // Segunda imagen para continuidad
+        this.buildings2 = this.add.image(this.buildings1.width * 0.35, 600, 'edificios');
+        this.buildings2.setOrigin(0, 1);
+        this.buildings2.setScale(0.35);
+        this.buildings2.setDepth(0);
+        
+        // Velocidad de movimiento más lenta para efecto parallax
+        this.buildingsSpeed = 2;
+        
+        console.log('Fondo de edificios creado para efecto parallax (escala 0.5)');
+    }
+    
     createBird() {
         // Crear pájaro con el personaje seleccionado - Tamaño original del juego
         this.bird = this.physics.add.sprite(100, 300, this.selectedCharacter);
@@ -364,6 +386,9 @@ export class GameScene extends Phaser.Scene {
         // Verificar límites de pantalla manualmente
         this.checkBounds();
         
+        // Mover edificios (parallax)
+        this.updateBuildings();
+        
         // Mover tubos manualmente (sin física)
         this.updatePipes();
         
@@ -377,6 +402,23 @@ export class GameScene extends Phaser.Scene {
         this.cleanupOffscreenElements();
         
 
+    }
+    
+    updateBuildings() {
+        if (!this.gameStarted || this.gameOver) return;
+        
+        // Mover edificios hacia la izquierda más lento que los obstáculos (efecto parallax)
+        this.buildings1.x -= this.buildingsSpeed;
+        this.buildings2.x -= this.buildingsSpeed;
+        
+        // Reposicionar cuando salgan de pantalla para efecto infinito (ajustado para escala 0.35)
+        const scaledWidth = this.buildings1.width * 0.35;
+        if (this.buildings1.x + scaledWidth <= 0) {
+            this.buildings1.x = this.buildings2.x + scaledWidth;
+        }
+        if (this.buildings2.x + scaledWidth <= 0) {
+            this.buildings2.x = this.buildings1.x + scaledWidth;
+        }
     }
     
     updatePipes() {
