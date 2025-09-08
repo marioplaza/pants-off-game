@@ -593,7 +593,7 @@ export class GameScene extends Phaser.Scene {
     }
     
     maybeAddCollectible() {
-        if (this.gameOver || Math.random() > 0.4) return;
+        if (this.gameOver || Math.random() > 0.5) return;
         
         // Solo crear coleccionable si hay tubos recientes para usar su hueco
         if (!this.pipeArray || this.pipeArray.length === 0) return;
