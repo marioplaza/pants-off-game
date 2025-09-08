@@ -9,11 +9,11 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     preload() {
-        console.log('GameOverScene: Cargando assets...');
+        // console.log('GameOverScene: Cargando assets...');
     }
 
     create() {
-        console.log('GameOverScene: Creando pantalla de Game Over...');
+        // console.log('GameOverScene: Creando pantalla de Game Over...');
         
         // Fondo de la pantalla de fin adaptado con bleed
         const bleed = 2;
@@ -93,7 +93,7 @@ export class GameOverScene extends Phaser.Scene {
     }
     
     openSpotify() {
-        console.log('GameOverScene: Intentando abrir Spotify...');
+        // console.log('GameOverScene: Intentando abrir Spotify...');
         
         const artistId = '4fgMYzpV29Kq2DpFcO0p82';
         const spotifyAppUrl = `spotify:artist:${artistId}`;
@@ -103,7 +103,7 @@ export class GameOverScene extends Phaser.Scene {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         
         if (isIOS) {
-            console.log('GameOverScene: iOS detectado - usando link directo con detección');
+            // console.log('GameOverScene: iOS detectado - usando link directo con detección');
             
             let appOpened = false;
             const startTime = Date.now();
@@ -112,7 +112,7 @@ export class GameOverScene extends Phaser.Scene {
             const handleVisibilityChange = () => {
                 if (document.hidden) {
                     appOpened = true;
-                    console.log('GameOverScene: App abierta exitosamente');
+                    // console.log('GameOverScene: App abierta exitosamente');
                 }
             };
             
@@ -120,10 +120,10 @@ export class GameOverScene extends Phaser.Scene {
                 const timeSpent = Date.now() - startTime;
                 if (timeSpent < 2000) {
                     // Si volvemos rápido, probablemente la app no se abrió
-                    console.log('GameOverScene: Regreso rápido, probablemente app no disponible');
+                    // console.log('GameOverScene: Regreso rápido, probablemente app no disponible');
                 } else {
                     appOpened = true;
-                    console.log('GameOverScene: App se abrió (tiempo largo fuera)');
+                    // console.log('GameOverScene: App se abrió (tiempo largo fuera)');
                 }
             };
             
@@ -143,14 +143,14 @@ export class GameOverScene extends Phaser.Scene {
                 window.removeEventListener('pageshow', handlePageShow);
                 
                 if (!appOpened) {
-                    console.log('GameOverScene: App no se abrió, abriendo web');
+                    // console.log('GameOverScene: App no se abrió, abriendo web');
                     window.open(spotifyWebUrl, '_blank', 'noopener,noreferrer');
                 }
             }, 2500); // Más tiempo para que el usuario decida
             
         } else {
             // En otros dispositivos: mantener lógica anterior
-            console.log('GameOverScene: No-iOS - usando fallback web');
+            // console.log('GameOverScene: No-iOS - usando fallback web');
             const appLink = document.createElement('a');
             appLink.href = spotifyAppUrl;
             document.body.appendChild(appLink);

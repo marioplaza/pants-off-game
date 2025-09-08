@@ -17,11 +17,11 @@ export class RankingScene extends Phaser.Scene {
     }
 
     preload() {
-        console.log('RankingScene: Assets ya cargados');
+        // console.log('RankingScene: Assets ya cargados');
     }
 
     create() {
-        console.log('RankingScene: Creando pantalla de ranking...');
+        // console.log('RankingScene: Creando pantalla de ranking...');
         
         // Fondo específico para ranking adaptado con bleed
         const bleed = 2;

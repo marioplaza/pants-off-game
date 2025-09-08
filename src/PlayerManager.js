@@ -23,11 +23,11 @@ export class PlayerManager {
                     bestScore: playerData.bestScore || 0,
                     isRegistered: true
                 };
-                console.log('Player data loaded:', this.player);
+                // console.log('Player data loaded:', this.player);
             } else {
                 // Generar ID único para nuevo jugador
                 this.player.id = this.generatePlayerId();
-                console.log('New player ID generated:', this.player.id);
+                // console.log('New player ID generated:', this.player.id);
             }
         } catch (error) {
             console.error('Error loading player data:', error);
@@ -52,7 +52,7 @@ export class PlayerManager {
         };
         
         localStorage.setItem('flappy_player', JSON.stringify(playerData));
-        console.log('Player registered locally:', playerData);
+        // console.log('Player registered locally:', playerData);
     }
     
     updateBestScore(score) {

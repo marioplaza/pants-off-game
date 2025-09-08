@@ -8,11 +8,11 @@ export class CharacterSelectScene extends Phaser.Scene {
     }
 
     preload() {
-        console.log('CharacterSelectScene: Assets ya cargados');
+        // console.log('CharacterSelectScene: Assets ya cargados');
     }
 
     create() {
-        console.log('CharacterSelectScene: Creando selección de personajes...');
+        // console.log('CharacterSelectScene: Creando selección de personajes...');
         
         // Inicializar sistemas de jugador y API
         this.playerManager = new PlayerManager();
@@ -149,22 +149,22 @@ export class CharacterSelectScene extends Phaser.Scene {
             });
         } else {
             // Jugador no registrado: mostrar modal de registro
-            console.log('👤 Jugador no registrado, mostrando modal...');
+            // console.log('👤 Jugador no registrado, mostrando modal...');
             this.time.delayedCall(200, () => {
                 this.showNameInputModal();
             });
         }
         
-        console.log('Personaje seleccionado:', character);
+        // console.log('Personaje seleccionado:', character);
     }
     
     showNameInputModal() {
-        console.log('📝 Mostrando modal de registro de nombre');
+        // console.log('📝 Mostrando modal de registro de nombre');
         
         // PRIMERO: Limpiar cualquier modal existente para evitar duplicados
         const existingModal = document.getElementById('name-input-container');
         if (existingModal) {
-            console.log('🧹 Limpiando modal existente...');
+            // console.log('🧹 Limpiando modal existente...');
             existingModal.remove();
         }
         
@@ -244,7 +244,7 @@ export class CharacterSelectScene extends Phaser.Scene {
             return; // Validación ya manejada
         }
         
-        console.log('🚀 Registrando jugador:', playerName);
+        // console.log('🚀 Registrando jugador:', playerName);
         
         // Mostrar feedback de carga
         const validation = document.getElementById('name-validation');
@@ -261,7 +261,7 @@ export class CharacterSelectScene extends Phaser.Scene {
             // Registrar localmente
             this.playerManager.registerPlayer(playerName);
             
-            console.log('✅ Jugador registrado exitosamente');
+            // console.log('✅ Jugador registrado exitosamente');
             
             // Cerrar modal e iniciar juego
             this.hideNameInputModal();
@@ -274,7 +274,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     }
     
     cancelPlayerName() {
-        console.log('❌ Registro cancelado, volviendo al menú');
+        // console.log('❌ Registro cancelado, volviendo al menú');
         this.hideNameInputModal();
         // Volver al menú principal como en el original
         this.scene.start('MainMenuScene');

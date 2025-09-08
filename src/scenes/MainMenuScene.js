@@ -6,7 +6,7 @@ export class MainMenuScene extends Phaser.Scene {
     }
 
     preload() {
-        console.log('MainMenuScene: Cargando assets...');
+        // console.log('MainMenuScene: Cargando assets...');
         
         // Cargar todos los assets del juego
         AssetLoader.preloadAssets(this);
@@ -49,7 +49,7 @@ export class MainMenuScene extends Phaser.Scene {
     }
 
     create() {
-        console.log('MainMenuScene: Creando menú principal...');
+        // console.log('MainMenuScene: Creando menú principal...');
         this.cameras.main.roundPixels = true;
         
         // Fondo principal adaptado al tamaño lógico
@@ -141,14 +141,14 @@ export class MainMenuScene extends Phaser.Scene {
                 loop: true
             });
             this.backgroundMusic.play();
-            console.log('Música de fondo iniciada (melodia.mp3)');
+            // console.log('Música de fondo iniciada (melodia.mp3)');
         } catch (error) {
-            console.log('No se pudo iniciar la música de fondo:', error);
+            // console.log('No se pudo iniciar la música de fondo:', error);
         }
     }
     
     openSpotify() {
-        console.log('MainMenuScene: Intentando abrir Spotify...');
+        // console.log('MainMenuScene: Intentando abrir Spotify...');
         
         const artistId = '4fgMYzpV29Kq2DpFcO0p82';
         const spotifyAppUrl = `spotify:artist:${artistId}`;
@@ -158,7 +158,7 @@ export class MainMenuScene extends Phaser.Scene {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         
         if (isIOS) {
-            console.log('MainMenuScene: iOS detectado - usando link directo con detección');
+            // console.log('MainMenuScene: iOS detectado - usando link directo con detección');
             
             let appOpened = false;
             const startTime = Date.now();
@@ -167,7 +167,7 @@ export class MainMenuScene extends Phaser.Scene {
             const handleVisibilityChange = () => {
                 if (document.hidden) {
                     appOpened = true;
-                    console.log('MainMenuScene: App abierta exitosamente');
+                    // console.log('MainMenuScene: App abierta exitosamente');
                 }
             };
             
@@ -175,10 +175,10 @@ export class MainMenuScene extends Phaser.Scene {
                 const timeSpent = Date.now() - startTime;
                 if (timeSpent < 2000) {
                     // Si volvemos rápido, probablemente la app no se abrió
-                    console.log('MainMenuScene: Regreso rápido, probablemente app no disponible');
+                    // console.log('MainMenuScene: Regreso rápido, probablemente app no disponible');
                 } else {
                     appOpened = true;
-                    console.log('MainMenuScene: App se abrió (tiempo largo fuera)');
+                    // console.log('MainMenuScene: App se abrió (tiempo largo fuera)');
                 }
             };
             
@@ -198,14 +198,14 @@ export class MainMenuScene extends Phaser.Scene {
                 window.removeEventListener('pageshow', handlePageShow);
                 
                 if (!appOpened) {
-                    console.log('MainMenuScene: App no se abrió, abriendo web');
+                    // console.log('MainMenuScene: App no se abrió, abriendo web');
                     window.open(spotifyWebUrl, '_blank', 'noopener,noreferrer');
                 }
             }, 2500); // Más tiempo para que el usuario decida
             
         } else {
             // En otros dispositivos: mantener lógica anterior
-            console.log('MainMenuScene: No-iOS - usando fallback web');
+            // console.log('MainMenuScene: No-iOS - usando fallback web');
             const appLink = document.createElement('a');
             appLink.href = spotifyAppUrl;
             document.body.appendChild(appLink);

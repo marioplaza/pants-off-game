@@ -6,7 +6,7 @@ export class ApiService {
     
     async registerPlayer(playerId, playerName) {
         try {
-            console.log('📞 Registrando jugador:', { playerId, playerName });
+            // console.log('📞 Registrando jugador:', { playerId, playerName });
             
             const response = await fetch(`${this.baseUrl}/register-player`, {
                 method: 'POST',
@@ -22,7 +22,7 @@ export class ApiService {
             const result = await response.json();
             
             if (response.ok) {
-                console.log('✅ Jugador registrado exitosamente');
+                // console.log('✅ Jugador registrado exitosamente');
                 return { success: true, data: result };
             } else {
                 console.error('❌ Error al registrar jugador:', result.error);
@@ -36,7 +36,7 @@ export class ApiService {
     
     async submitScore(playerId, score, gameData = {}) {
         try {
-            console.log('📞 Enviando puntuación:', { playerId, score });
+            // console.log('📞 Enviando puntuación:', { playerId, score });
             
             const response = await fetch(`${this.baseUrl}/submit-score`, {
                 method: 'POST',
@@ -56,7 +56,7 @@ export class ApiService {
             const result = await response.json();
             
             if (response.ok) {
-                console.log('✅ Puntuación enviada exitosamente:', result);
+                // console.log('✅ Puntuación enviada exitosamente:', result);
                 return { success: true, data: result };
             } else {
                 console.error('❌ Error al enviar puntuación:', result.error);
@@ -75,13 +75,13 @@ export class ApiService {
                 url += `&playerId=${playerId}`;
             }
             
-            console.log('📞 Obteniendo leaderboard:', url);
+            // console.log('📞 Obteniendo leaderboard:', url);
             
             const response = await fetch(url);
             
             if (response.ok) {
                 const result = await response.json();
-                console.log('✅ Leaderboard obtenido exitosamente');
+                // console.log('✅ Leaderboard obtenido exitosamente');
                 return { success: true, data: result };
             } else {
                 console.error('❌ Error al obtener leaderboard');
@@ -99,13 +99,13 @@ export class ApiService {
         this.submitScore(playerId, score, gameData)
             .then(result => {
                 if (result.success) {
-                    console.log('✅ Puntuación enviada en background');
+                    // console.log('✅ Puntuación enviada en background');
                 } else {
-                    console.log('❌ Error al enviar puntuación en background:', result.error);
+                    // console.log('❌ Error al enviar puntuación en background:', result.error);
                 }
             })
             .catch(error => {
-                console.log('❌ Error en envío background:', error);
+                // console.log('❌ Error en envío background:', error);
             });
     }
 }

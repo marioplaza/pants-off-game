@@ -61,7 +61,7 @@ export class AssetLoader {
         scene.load.audio('pickup', ['/assets/sounds/pickup.ogg', '/assets/sounds/pickup.wav']);
         scene.load.audio('lose', ['/assets/sounds/lose.ogg', '/assets/sounds/lose.wav']);
         
-        console.log('AssetLoader: Todos los assets configurados para carga');
+        // console.log('AssetLoader: Todos los assets configurados para carga');
     }
     
     // Mapeo de personajes a sus instrumentos

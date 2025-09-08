@@ -11,7 +11,7 @@ export class GameScene extends Phaser.Scene {
         // Recibir personaje seleccionado
         this.selectedCharacter = data.selectedCharacter || 'fonso';
         this.selectedInstrument = AssetLoader.getInstrumentForCharacter(this.selectedCharacter);
-        console.log(`Iniciando juego con ${this.selectedCharacter} - instrumento: ${this.selectedInstrument}`);
+        // console.log(`Iniciando juego con ${this.selectedCharacter} - instrumento: ${this.selectedInstrument}`);
         
         // Inicializar sistemas de jugador y API
         this.playerManager = new PlayerManager();
@@ -19,16 +19,16 @@ export class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        console.log('GameScene: Assets ya cargados');
+        // console.log('GameScene: Assets ya cargados');
     }
 
     create() {
-        console.log('GameScene: Creando juego...');
+        // console.log('GameScene: Creando juego...');
         
         // Limpiar cualquier modal residual del DOM como medida de seguridad
         const existingModal = document.getElementById('name-input-container');
         if (existingModal) {
-            console.log('🧹 GameScene: Limpiando modal residual...');
+            // console.log('🧹 GameScene: Limpiando modal residual...');
             existingModal.remove();
         }
         
@@ -127,7 +127,7 @@ export class GameScene extends Phaser.Scene {
             paused: true // Pausado hasta que empiece el juego
         });
         
-        console.log('Timer de tubos configurado');
+        // console.log('Timer de tubos configurado');
         
         // Timer para generar coleccionables
         this.collectibleTimer = this.time.addEvent({
@@ -198,7 +198,7 @@ export class GameScene extends Phaser.Scene {
             }
         });
         
-        console.log('Video de fondo configurado con mejoras para móviles');
+        // console.log('Video de fondo configurado con mejoras para móviles');
     }
 
     layoutBackgroundVideoCover() {
@@ -226,13 +226,13 @@ export class GameScene extends Phaser.Scene {
             }
             
             // Debug para iOS: mostrar qué dimensiones detectamos
-            console.log(`Video dimensions detected: ${videoWidth}x${videoHeight} (readyState: ${htmlVideo.readyState})`);
+            // console.log(`Video dimensions detected: ${videoWidth}x${videoHeight} (readyState: ${htmlVideo.readyState})`);
             
             // En iOS a veces las dimensiones son 0 inicialmente, usar fallback
             if (videoWidth === 0 || videoHeight === 0) {
                 videoWidth = 400;
                 videoHeight = 600;
-                console.log('Using fallback dimensions for video');
+                // console.log('Using fallback dimensions for video');
             }
         }
         
@@ -249,7 +249,7 @@ export class GameScene extends Phaser.Scene {
         this.backgroundVideo.setDisplaySize(displayWidth, displayHeight);
         this.backgroundVideo.setVisible(true);
         
-        console.log(`Video layout applied: ${displayWidth}x${displayHeight} at (${posX}, ${posY}), scale: ${scale}`);
+        // console.log(`Video layout applied: ${displayWidth}x${displayHeight} at (${posX}, ${posY}), scale: ${scale}`);
     }
 
     shutdownVideoLayoutHandlers() {
@@ -269,7 +269,7 @@ export class GameScene extends Phaser.Scene {
     
     createBoundaries() {
         // NO crear límites visuales - solo usar detección por posición Y
-        console.log('Sin límites visuales - detección por coordenadas');
+        // console.log('Sin límites visuales - detección por coordenadas');
     }
     
     createBuildingsBackground() {
@@ -289,7 +289,7 @@ export class GameScene extends Phaser.Scene {
         // Velocidad de movimiento más lenta para efecto parallax
         this.buildingsSpeed = 2;
         
-        console.log(`Fondo de edificios creado - Ancho escalado: ${scaledWidth}px`);
+        // console.log(`Fondo de edificios creado - Ancho escalado: ${scaledWidth}px`);
     }
     
     createBird() {
@@ -304,7 +304,7 @@ export class GameScene extends Phaser.Scene {
         this.bird.body.setBounce(0.2);
         this.bird.body.setMaxVelocityY(600);
         
-        console.log(`Pájaro creado: ${this.selectedCharacter}`);
+        // console.log(`Pájaro creado: ${this.selectedCharacter}`);
     }
     
     setupControls() {
@@ -368,9 +368,9 @@ export class GameScene extends Phaser.Scene {
                 loop: true
             });
             this.gameMusic.play();
-            console.log('Música del juego iniciada (melodia.mp3)');
+            // console.log('Música del juego iniciada (melodia.mp3)');
         } else {
-            console.log('Música ya está sonando - continuando');
+            // console.log('Música ya está sonando - continuando');
         }
     }
     
@@ -438,7 +438,7 @@ export class GameScene extends Phaser.Scene {
                     this.score += 1;
                     this.scoreText.setText('Puntuación: ' + this.score);
                     pipe.scored = true;
-                    console.log(`¡Punto! Puntuación: ${this.score}`);
+                    // console.log(`¡Punto! Puntuación: ${this.score}`);
                 }
                 
                 // Eliminar tubos que salen de pantalla
@@ -493,7 +493,7 @@ export class GameScene extends Phaser.Scene {
                 birdBounds.y < pipeBounds.y + pipeBounds.height &&
                 birdBounds.y + birdBounds.height > pipeBounds.y) {
                 
-                console.log('¡Colisión con tubo detectada!');
+                // console.log('¡Colisión con tubo detectada!');
                 this.hitPipe();
                 return;
             }
@@ -527,7 +527,7 @@ export class GameScene extends Phaser.Scene {
                 birdBounds.y < collectibleBounds.y + collectibleBounds.height &&
                 birdBounds.y + birdBounds.height > collectibleBounds.y) {
                 
-                console.log('¡Coleccionable recogido!');
+                // console.log('¡Coleccionable recogido!');
                 this.collectItem(collectible);
                 return;
             }
@@ -560,16 +560,16 @@ export class GameScene extends Phaser.Scene {
         this.pipeTimer.paused = false;
         this.collectibleTimer.paused = false;
         
-        console.log('¡Juego iniciado!');
+        // console.log('¡Juego iniciado!');
     }
     
     addPipe() {
         if (this.gameOver) {
-            console.log('No crear tubo - juego terminado');
+            // console.log('No crear tubo - juego terminado');
             return;
         }
         
-        console.log('¡CREANDO TUBOS VERDES!');
+        // console.log('¡CREANDO TUBOS VERDES!');
         
         // Crear tubo igual que en el original: altura aleatoria
         const height = 50 + Math.random() * (600 - this.pipeGap - 100);
@@ -599,7 +599,7 @@ export class GameScene extends Phaser.Scene {
         if (!this.pipeArray) this.pipeArray = [];
         this.pipeArray.push(topPipe, bottomPipe);
         
-        console.log(`✅ TUBOS CREADOS - Height: ${height}, Gap: ${this.pipeGap}, Speed: ${this.pipeSpeed}, Count: ${this.pipes.children.size}`);
+        // console.log(`✅ TUBOS CREADOS - Height: ${height}, Gap: ${this.pipeGap}, Speed: ${this.pipeSpeed}, Count: ${this.pipes.children.size}`);
     }
     
     maybeAddCollectible() {
@@ -646,7 +646,7 @@ export class GameScene extends Phaser.Scene {
             repeat: -1
         });
         
-        console.log(`Coleccionable creado en hueco seguro Y=${collectibleY}: ${this.selectedInstrument}`);
+        // console.log(`Coleccionable creado en hueco seguro Y=${collectibleY}: ${this.selectedInstrument}`);
     }
     
     updateDifficulty() {
@@ -678,7 +678,7 @@ export class GameScene extends Phaser.Scene {
                 this.score += 1;
                 this.scoreText.setText('Puntuación: ' + this.score);
                 pipe.scored = true;
-                console.log(`¡Punto! Puntuación: ${this.score}`);
+                // console.log(`¡Punto! Puntuación: ${this.score}`);
             }
             
             // Destruir cuando salga de pantalla
@@ -696,7 +696,7 @@ export class GameScene extends Phaser.Scene {
     }
     
     hitPipe() {
-        console.log('¡Perdiste! Pájaro chocó con obstáculo');
+        // console.log('¡Perdiste! Pájaro chocó con obstáculo');
         
         // Efecto visual de colisión
         this.bird.setTint(0xff0000); // Colorear de rojo
@@ -710,14 +710,14 @@ export class GameScene extends Phaser.Scene {
     checkBounds() {
         // Perder si toca el suelo
         if (this.bird.y >= 580) {
-            console.log('¡Perdiste! Pájaro tocó el suelo');
+            // console.log('¡Perdiste! Pájaro tocó el suelo');
             this.bird.setTint(0xff0000);
             this.endGame();
         }
         
         // Perder si toca el techo
         if (this.bird.y <= 20) {
-            console.log('¡Perdiste! Pájaro tocó el techo');
+            // console.log('¡Perdiste! Pájaro tocó el techo');
             this.bird.setTint(0xff0000);
             this.endGame();
         }
@@ -754,14 +754,14 @@ export class GameScene extends Phaser.Scene {
         }
         collectible.destroy();
         
-        console.log(`¡Coleccionable recogido! +5 puntos. Total: ${this.score}`);
+        // console.log(`¡Coleccionable recogido! +5 puntos. Total: ${this.score}`);
     }
     
     endGame() {
         if (this.gameOver) return;
         
         this.gameOver = true;
-        console.log(`Juego terminado. Puntuación final: ${this.score}`);
+        // console.log(`Juego terminado. Puntuación final: ${this.score}`);
         
         // NO detener música - debe continuar sonando en GameOver
         
@@ -785,7 +785,7 @@ export class GameScene extends Phaser.Scene {
         
         // Si el jugador está registrado, enviar puntuación automáticamente
         if (this.playerManager.isPlayerRegistered()) {
-            console.log('🚀 Jugador registrado, enviando puntuación en background...');
+            // console.log('🚀 Jugador registrado, enviando puntuación en background...');
             
             // Enviar score en background (como en el original)
             this.apiService.submitScoreAsync(
