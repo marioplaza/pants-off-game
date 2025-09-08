@@ -31,6 +31,7 @@ export class AssetLoader {
         scene.load.image('escoitanos', '/assets/images/escoitanos.webp');
         scene.load.image('escoitanos2', '/assets/images/escoitanos2.webp');
         scene.load.image('elixeoteupersonaxe', '/assets/images/elixeoteupersonaxe.webp');
+        scene.load.image('volver', '/assets/images/volver.webp');
         
         // Pájaro y elementos de juego
         scene.load.image('pajaro', '/assets/images/pajaro.webp');

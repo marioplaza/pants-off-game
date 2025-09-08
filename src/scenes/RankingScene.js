@@ -42,17 +42,8 @@ export class RankingScene extends Phaser.Scene {
             }
         });
         
-        // Botón volver - centrado abajo como en el original
-        const backButton = this.add.text(200, 530, 'VOLTAR', {
-            fontSize: '18px',
-            fill: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 2,
-            fontFamily: 'PixelDigivolve, monospace',
-            backgroundColor: '#4CAF50',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5);
-        
+        // Botón volver - imagen centrada abajo
+        const backButton = this.add.image(200, 530, 'volver').setOrigin(0.5);
         backButton.setInteractive({ useHandCursor: true });
         backButton.on('pointerdown', () => {
             this.sound.play('select', { volume: 0.3 });
