@@ -359,18 +359,19 @@ export class GameScene extends Phaser.Scene {
     }
     
     startGameMusic() {
-        // Detener música del menú si existe
-        if (this.sound.get('cancion')) {
-            this.sound.get('cancion').stop();
+        // No cambiar música - melodia.mp3 ya está sonando desde MainMenu
+        // Solo verificar que esté sonando
+        if (!this.sound.get('melodia')) {
+            // Si por alguna razón no está sonando, iniciarla
+            this.gameMusic = this.sound.add('melodia', {
+                volume: 0.3,
+                loop: true
+            });
+            this.gameMusic.play();
+            console.log('Música del juego iniciada (melodia.mp3)');
+        } else {
+            console.log('Música ya está sonando - continuando');
         }
-        
-        // Iniciar música del juego
-        this.gameMusic = this.sound.add('melodia', {
-            volume: 0.3,
-            loop: true
-        });
-        this.gameMusic.play();
-        console.log('Música del juego iniciada');
     }
     
 
@@ -762,10 +763,7 @@ export class GameScene extends Phaser.Scene {
         this.gameOver = true;
         console.log(`Juego terminado. Puntuación final: ${this.score}`);
         
-        // Detener música
-        if (this.gameMusic) {
-            this.gameMusic.stop();
-        }
+        // NO detener música - debe continuar sonando en GameOver
         
         // Reproducir sonido de pérdida
         this.sound.play('lose', { volume: 0.02 });

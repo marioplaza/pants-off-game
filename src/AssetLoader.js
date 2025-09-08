@@ -54,7 +54,6 @@ export class AssetLoader {
         // ===================
         
         // Música de fondo
-        scene.load.audio('cancion', '/assets/sounds/cancion.mp3');
         scene.load.audio('melodia', '/assets/sounds/melodia.mp3');
         
         // Efectos de sonido (con fallback)

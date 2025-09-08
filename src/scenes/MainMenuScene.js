@@ -129,19 +129,19 @@ export class MainMenuScene extends Phaser.Scene {
     }
     
     startBackgroundMusic() {
-        // Verificar si ya hay música del menú sonando
-        if (this.sound.get('cancion')) {
+        // Verificar si ya hay música sonando
+        if (this.sound.get('melodia')) {
             return;
         }
         
         try {
-            // Usar cancion.mp3 para el menú, melodia.mp3 será para el juego
-            this.backgroundMusic = this.sound.add('cancion', {
+            // Usar melodia.mp3 para todo el juego (menús y gameplay)
+            this.backgroundMusic = this.sound.add('melodia', {
                 volume: 0.3,
                 loop: true
             });
             this.backgroundMusic.play();
-            console.log('Música de fondo del menú iniciada');
+            console.log('Música de fondo iniciada (melodia.mp3)');
         } catch (error) {
             console.log('No se pudo iniciar la música de fondo:', error);
         }
