@@ -359,19 +359,9 @@ export class GameScene extends Phaser.Scene {
     }
     
     startGameMusic() {
-        // No cambiar música - melodia.mp3 ya está sonando desde MainMenu
-        // Solo verificar que esté sonando
-        if (!this.sound.get('melodia')) {
-            // Si por alguna razón no está sonando, iniciarla
-            this.gameMusic = this.sound.add('melodia', {
-                volume: 0.3,
-                loop: true
-            });
-            this.gameMusic.play();
-            // console.log('Música del juego iniciada (melodia.mp3)');
-        } else {
-            // console.log('Música ya está sonando - continuando');
-        }
+        // La música melodia.mp3 ya está sonando desde MainMenu
+        // No hacer nada para mantener continuidad
+        // console.log('Música ya está sonando desde el menú - continuando');
     }
     
 
