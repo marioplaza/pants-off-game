@@ -42,20 +42,23 @@ export class RankingScene extends Phaser.Scene {
             }
         });
         
-        // Botón volver - imagen centrada abajo
+        // Botón volver - imagen centrada abajo con mismo tamaño que MainMenuScene
         const backButton = this.add.image(200, 530, 'volver').setOrigin(0.5);
+        backButton.setDisplaySize(200, backButton.height * (200 / backButton.width));
         backButton.setInteractive({ useHandCursor: true });
         backButton.on('pointerdown', () => {
             this.sound.play('select', { volume: 0.3 });
             this.goBack();
         });
         
-        // Efecto hover
+        // Efecto hover igual que en MainMenuScene
+        const bbw = backButton.displayWidth;
+        const bbh = backButton.displayHeight;
         backButton.on('pointerover', () => {
-            backButton.setScale(1.1);
+            backButton.setDisplaySize(bbw * 1.1, bbh * 1.1);
         });
         backButton.on('pointerout', () => {
-            backButton.setScale(1.0);
+            backButton.setDisplaySize(bbw, bbh);
         });
         
         // Texto de carga
