@@ -90,6 +90,25 @@ export class GameOverScene extends Phaser.Scene {
         const spotifyAppUrl = `spotify:artist:${artistId}`;
         const spotifyWebUrl = `https://open.spotify.com/intl-es/artist/${artistId}`;
         
+        let appOpened = false;
+        
+        // Detectar si la app se abre monitoreando visibility/blur
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                appOpened = true;
+                console.log('GameOverScene: App detectada como abierta, cancelando fallback web');
+            }
+        };
+        
+        const handleBlur = () => {
+            appOpened = true;
+            console.log('GameOverScene: Ventana perdió foco, app probablemente abierta');
+        };
+        
+        // Agregar listeners temporalmente
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleBlur);
+        
         // Intentar abrir la app de Spotify primero
         const appLink = document.createElement('a');
         appLink.href = spotifyAppUrl;
@@ -99,17 +118,25 @@ export class GameOverScene extends Phaser.Scene {
         
         console.log('GameOverScene: Intento de apertura de app ejecutado');
         
-        // Fallback a web después de 1 segundo si la app no se abre
+        // Fallback a web solo si la app no se abrió
         setTimeout(() => {
-            console.log('GameOverScene: Ejecutando fallback a web...');
-            const webLink = document.createElement('a');
-            webLink.href = spotifyWebUrl;
-            webLink.target = '_blank';
-            webLink.rel = 'noopener noreferrer';
-            document.body.appendChild(webLink);
-            webLink.click();
-            document.body.removeChild(webLink);
-        }, 1000);
+            // Limpiar listeners
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('blur', handleBlur);
+            
+            if (!appOpened) {
+                console.log('GameOverScene: App no detectada, ejecutando fallback a web...');
+                const webLink = document.createElement('a');
+                webLink.href = spotifyWebUrl;
+                webLink.target = '_blank';
+                webLink.rel = 'noopener noreferrer';
+                document.body.appendChild(webLink);
+                webLink.click();
+                document.body.removeChild(webLink);
+            } else {
+                console.log('GameOverScene: Fallback web cancelado - app ya abierta');
+            }
+        }, 1500);
     }
     
 
