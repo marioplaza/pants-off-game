@@ -142,7 +142,7 @@ export class RankingScene extends Phaser.Scene {
             const lastPlayerY = startY + (Math.min(10, leaderboard.length) - 1) * 30;
             const playerSectionY = lastPlayerY + 30; // Espacio después del último jugador
             
-            this.add.text(200, playerSectionY, '➡️ TU POSICIÓN:', {
+            this.add.text(200, playerSectionY, '➡️ A TÚA POSICIÓN:', {
                 fontSize: '14px',
                 fill: '#ffff00',
                 stroke: '#000000',
